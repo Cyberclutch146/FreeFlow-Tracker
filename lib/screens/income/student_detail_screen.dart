@@ -52,11 +52,11 @@ class StudentDetailScreen extends ConsumerWidget {
               orElse: () => Student(
                 id: 'not_found',
                 name: 'Not Found',
-                gradeLevel: 'Unknown',
                 subject: 'Unknown',
-                hourlyRate: 0,
-                parentName: null,
-                parentContact: null,
+                feePerSession: 0,
+                schedule: 'None',
+                isActive: false,
+                createdAt: DateTime.now(),
               ),
             );
 
@@ -81,16 +81,16 @@ class StudentDetailScreen extends ConsumerWidget {
                         children: [
                           Icon(Icons.school_rounded, color: colors.accentAmber, size: 20),
                           const SizedBox(width: 8),
-                          Text('${student.subject} • ${student.gradeLevel}', style: textStyles.bodyLarge),
+                          Text('${student.subject}', style: textStyles.bodyLarge),
                         ],
                       ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.1),
-                      if (student.parentName != null && student.parentName!.isNotEmpty) ...[
+                      if (student.schedule != null && student.schedule!.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.family_restroom_rounded, color: colors.textMuted, size: 20),
+                            Icon(Icons.calendar_month_rounded, color: colors.textMuted, size: 20),
                             const SizedBox(width: 8),
-                            Text('${student.parentName}', style: textStyles.bodyMedium),
+                            Text('${student.schedule}', style: textStyles.bodyMedium),
                           ],
                         ).animate().fadeIn(delay: 150.ms).slideX(begin: -0.1),
                       ],
@@ -106,10 +106,10 @@ class StudentDetailScreen extends ConsumerWidget {
                           children: [
                             Column(
                               children: [
-                                Text('Hourly Rate', style: textStyles.labelMedium),
+                                Text('Fee Per Session', style: textStyles.bodyMedium),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${CurrencyFormatter.format(student.hourlyRate)}/hr',
+                                  '${CurrencyFormatter.format(student.feePerSession)}/session',
                                   style: textStyles.headingLarge.copyWith(color: colors.accentAmber),
                                 ),
                               ],

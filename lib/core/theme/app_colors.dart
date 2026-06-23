@@ -13,9 +13,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color accentAmber;
   final Color accentRed;
   
-  final Color gradientBlob1;
-  final Color gradientBlob2;
-  
+
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
@@ -31,8 +29,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.accentTeal,
     required this.accentAmber,
     required this.accentRed,
-    required this.gradientBlob1,
-    required this.gradientBlob2,
+
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
@@ -50,8 +47,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accentTeal: config.accentSecondary,
       accentAmber: config.accentAmber,
       accentRed: config.accentRed,
-      gradientBlob1: config.gradientBlob1,
-      gradientBlob2: config.gradientBlob2,
+
       textPrimary: config.textPrimary,
       textSecondary: config.textSecondary,
       textMuted: config.textMuted,
@@ -70,8 +66,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? accentTeal,
     Color? accentAmber,
     Color? accentRed,
-    Color? gradientBlob1,
-    Color? gradientBlob2,
+
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
@@ -87,8 +82,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accentTeal: accentTeal ?? this.accentTeal,
       accentAmber: accentAmber ?? this.accentAmber,
       accentRed: accentRed ?? this.accentRed,
-      gradientBlob1: gradientBlob1 ?? this.gradientBlob1,
-      gradientBlob2: gradientBlob2 ?? this.gradientBlob2,
+
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
@@ -109,8 +103,7 @@ class AppColors extends ThemeExtension<AppColors> {
       accentTeal: Color.lerp(accentTeal, other.accentTeal, t)!,
       accentAmber: Color.lerp(accentAmber, other.accentAmber, t)!,
       accentRed: Color.lerp(accentRed, other.accentRed, t)!,
-      gradientBlob1: Color.lerp(gradientBlob1, other.gradientBlob1, t)!,
-      gradientBlob2: Color.lerp(gradientBlob2, other.gradientBlob2, t)!,
+
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,

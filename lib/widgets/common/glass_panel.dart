@@ -1,11 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 
 class GlassPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
-  final double blurSigma;
-  final double opacity;
   final BorderRadius? borderRadius;
   final Color? baseColor;
 
@@ -13,34 +11,27 @@ class GlassPanel extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16.0),
-    this.blurSigma = 24.0,
-    this.opacity = 0.08,
     this.borderRadius,
     this.baseColor,
+    // Kept for backwards compatibility but unused
+    double blurSigma = 24.0,
+    double opacity = 0.08,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(16);
-    final themeColor = baseColor ?? Theme.of(context).colorScheme.surface;
+    final themeColor = baseColor ?? colors.backgroundSurface;
 
-    return ClipRRect(
-      borderRadius: effectiveBorderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: themeColor.withValues(alpha: opacity),
-            borderRadius: effectiveBorderRadius,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-              width: 1,
-            ),
-          ),
-          child: child,
-        ),
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: themeColor,
+        borderRadius: effectiveBorderRadius,
+        // No border for the flat/clean look
       ),
+      child: child,
     );
   }
 }

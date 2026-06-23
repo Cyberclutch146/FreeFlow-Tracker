@@ -197,11 +197,11 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _buildThemeSelector(BuildContext context, WidgetRef ref, AppSettings settings) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildThemeCard(context, ref, AppThemeMode.dark, 'Midnight', Icons.nightlight_round, settings.theme == AppThemeMode.dark),
-        _buildThemeCard(context, ref, AppThemeMode.oled, 'OLED', Icons.brightness_3, settings.theme == AppThemeMode.oled),
-        _buildThemeCard(context, ref, AppThemeMode.light, 'Light', Icons.wb_sunny_rounded, settings.theme == AppThemeMode.light),
+        _buildThemeCard(context, ref, AppThemeMode.dark, 'Dark Mode', Icons.nightlight_round, settings.theme == AppThemeMode.dark || settings.theme == AppThemeMode.oled),
+        const SizedBox(width: 16),
+        _buildThemeCard(context, ref, AppThemeMode.light, 'Light Mode', Icons.wb_sunny_rounded, settings.theme == AppThemeMode.light),
       ],
     );
   }
@@ -216,7 +216,7 @@ class SettingsScreen extends ConsumerWidget {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: 100,
+        width: 140,
         height: 120,
         decoration: BoxDecoration(
           color: isSelected ? colors.accentPurple.withValues(alpha: 0.2) : colors.backgroundElevated.withValues(alpha: 0.5),

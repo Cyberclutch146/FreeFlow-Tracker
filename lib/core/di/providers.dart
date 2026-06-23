@@ -80,11 +80,10 @@ final themeConfigProvider = Provider<ThemeConfig>((ref) {
   
   switch (themeMode) {
     case AppThemeMode.dark:
-      return ThemeConfig.midnightAmethyst;
     case AppThemeMode.oled:
-      return ThemeConfig.pureOled;
+      return ThemeConfig.darkMode;
     case AppThemeMode.light:
-      return ThemeConfig.midnightAmethyst; // Fallback, light mode is currently replaced by Matte themes
+      return ThemeConfig.lightMode;
   }
 });
 

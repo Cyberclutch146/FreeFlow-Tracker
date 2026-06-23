@@ -29,6 +29,7 @@ class MainScaffold extends StatelessWidget {
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
           child: GlassPanel(
+            baseColor: context.colors.backgroundElevated,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             borderRadius: BorderRadius.circular(32),
             child: Row(

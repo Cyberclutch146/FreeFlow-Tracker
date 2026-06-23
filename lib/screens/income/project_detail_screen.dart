@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -53,10 +54,10 @@ class ProjectDetailScreen extends ConsumerWidget {
                 id: 'not_found',
                 name: 'Not Found',
                 clientName: 'Unknown',
-                hourlyRate: 0,
-                estimatedHours: 0,
+                totalValue: 0,
                 deadline: DateTime.now(),
                 status: ProjectStatus.ongoing,
+                createdAt: DateTime.now(),
               ),
             );
 
@@ -133,7 +134,7 @@ class ProjectDetailScreen extends ConsumerWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Total Value', style: textStyles.labelMedium),
+                                Text('Total Value', style: textStyles.bodyMedium),
                                 const SizedBox(height: 4),
                                 Text(
                                   CurrencyFormatter.format(project.totalValue),
@@ -144,10 +145,10 @@ class ProjectDetailScreen extends ConsumerWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('Rate', style: textStyles.labelMedium),
+                                Text('Deadline', style: textStyles.bodyMedium),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${CurrencyFormatter.format(project.hourlyRate)}/hr',
+                                  project.deadline != null ? '${project.deadline!.day}/${project.deadline!.month}/${project.deadline!.year}' : 'No deadline',
                                   style: textStyles.bodyLarge,
                                 ),
                               ],
