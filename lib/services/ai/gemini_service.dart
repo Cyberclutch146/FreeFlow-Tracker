@@ -3,10 +3,8 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../models/transaction.dart';
 import '../../models/savings_goal.dart';
 import '../../models/budget.dart';
-import '../../models/project.dart';
 import '../../models/app_settings.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/utils/currency_formatter.dart';
 
 class GeminiService {
   GenerativeModel? _flashModel;

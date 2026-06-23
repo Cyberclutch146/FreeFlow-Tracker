@@ -83,7 +83,7 @@ class StudentDetailScreen extends ConsumerWidget {
                         children: [
                           Icon(Icons.school_rounded, color: colors.accentAmber, size: 20),
                           const SizedBox(width: 8),
-                          Text('${student.subject}', style: textStyles.bodyLarge),
+                          Text(student.subject, style: textStyles.bodyLarge),
                         ],
                       ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.1),
                       if (student.schedule != null && student.schedule!.isNotEmpty) ...[

@@ -5,6 +5,8 @@ import 'core/theme/app_colors.dart';
 import 'core/theme/app_text_styles.dart';
 import 'core/di/providers.dart';
 import 'services/auth_service.dart';
+import 'models/transaction.dart';
+import 'package:home_widget/home_widget.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -65,6 +67,14 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
     final themeConfig = ref.watch(themeConfigProvider);
     ref.watch(autoSmsSyncProvider);
     
+    ref.listen<AsyncValue<List<Transaction>>>(unconfirmedTransactionsProvider, (prev, next) {
+      if (next is AsyncData) {
+        final count = next.value?.length ?? 0;
+        HomeWidget.saveWidgetData<String>('unconfirmed_count', count.toString());
+        HomeWidget.updateWidget(name: 'HomeScreenWidgetProvider');
+      }
+    });
+    
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'FreelanceFlow',
@@ -74,11 +84,11 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
       builder: (context, child) {
         return Stack(
           children: [
-            if (child != null) child,
+            ?child,
             if (_isLocked)
               Positioned.fill(
                 child: Container(
-                  color: AppColors.fromConfig(themeConfig).backgroundBase,
+                  color: AppColors.fromConfig(themeConfig).backgroundPrimary,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

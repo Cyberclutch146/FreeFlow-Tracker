@@ -63,6 +63,7 @@ dependencies:
   image_picker: ^1.2.2
   home_widget: ^0.9.3
 
+  path: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -10,7 +10,7 @@ class AuthService {
       final bool canAuthenticate =
           canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
       return canAuthenticate;
-    } on PlatformException {
+    } catch (e) {
       return false;
     }
   }
@@ -19,12 +19,10 @@ class AuthService {
     try {
       return await _auth.authenticate(
         localizedReason: 'Please authenticate to access your financial data',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
+        persistAcrossBackgrounding: true,
+        biometricOnly: false,
       );
-    } on PlatformException {
+    } catch (e) {
       return false;
     }
   }

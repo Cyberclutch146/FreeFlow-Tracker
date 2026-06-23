@@ -143,7 +143,7 @@ class _AddProjectSheetState extends ConsumerState<AddProjectSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<ProjectStatus>(
-                  value: _status,
+                  initialValue: _status,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(

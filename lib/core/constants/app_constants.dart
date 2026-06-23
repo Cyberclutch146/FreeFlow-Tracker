@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 enum TransactionDirection { debit, credit }
 enum Category { food, transport, academic, techTools, subscriptions, personal, entertainment, income, uncategorized }

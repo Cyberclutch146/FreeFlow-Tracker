@@ -48,7 +48,7 @@ class GoalsView extends ConsumerWidget {
                   );
                 },
                 loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
               ...goals.map((g) => _buildGoalCard(context, ref, g)),
             ],

@@ -52,9 +52,9 @@ class SmsParser {
 
     // Calculate Confidence
     Confidence confidence = Confidence.low;
-    if (merchant != null && merchant.isNotEmpty && direction != null && amount > 0) {
+    if (merchant != null && merchant.isNotEmpty && amount > 0) {
       confidence = Confidence.high;
-    } else if (direction != null && amount > 0) {
+    } else if (amount > 0) {
       confidence = Confidence.medium;
     }
 

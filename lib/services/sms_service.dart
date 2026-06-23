@@ -3,7 +3,6 @@ import 'package:telephony/telephony.dart';
 import 'package:uuid/uuid.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/sms_raw_log.dart';
-import '../database/database_service.dart';
 import 'sms/sms_parser.dart';
 
 class SmsService {

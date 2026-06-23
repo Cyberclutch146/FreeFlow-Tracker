@@ -9,7 +9,6 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
-import '../../models/insight_card.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -113,7 +112,7 @@ class HomeScreen extends ConsumerWidget {
                     );
                   },
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
 
                 // Insights Row
@@ -186,7 +185,7 @@ class HomeScreen extends ConsumerWidget {
                     );
                   },
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 ),
 
                 Row(

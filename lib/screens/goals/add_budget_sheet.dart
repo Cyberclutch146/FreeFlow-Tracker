@@ -79,7 +79,7 @@ class _AddBudgetSheetState extends ConsumerState<AddBudgetSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DropdownButtonFormField<Category>(
-            value: _category,
+            initialValue: _category,
             isExpanded: true,
             dropdownColor: colors.backgroundSurface,
             decoration: InputDecoration(

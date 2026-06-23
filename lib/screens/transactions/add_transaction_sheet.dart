@@ -195,7 +195,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<Category>(
-                  value: _category,
+                  initialValue: _category,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(
@@ -228,7 +228,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<PaymentMethod>(
-                  value: _paymentMethod,
+                  initialValue: _paymentMethod,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../widgets/common/app_bottom_sheet.dart';
 import '../../widgets/common/app_button.dart';
 import '../../models/student.dart';
@@ -133,7 +132,7 @@ class _AddStudentSheetState extends ConsumerState<AddStudentSheet> {
               style: TextStyle(color: colors.textMuted),
             ),
             value: _isActive,
-            activeColor: colors.accentTeal,
+            activeThumbColor: colors.accentTeal,
             onChanged: (val) => setState(() => _isActive = val),
             contentPadding: EdgeInsets.zero,
           ),

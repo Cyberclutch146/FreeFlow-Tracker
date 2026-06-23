@@ -8,7 +8,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../services/subscription_scanner_service.dart';
-import '../../models/transaction.dart';
 
 class SubscriptionsScreen extends ConsumerWidget {
   const SubscriptionsScreen({super.key});

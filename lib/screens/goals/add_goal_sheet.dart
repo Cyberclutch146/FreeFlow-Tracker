@@ -181,7 +181,7 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<Priority>(
-                  value: _priority,
+                  initialValue: _priority,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(

@@ -7,7 +7,6 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_constants.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../models/app_settings.dart';
-import '../../database/database_service.dart';
 import '../../services/export/csv_export_service.dart';
 import '../../services/sms/sms_parser.dart';
 import '../../services/sms/sms_to_transaction.dart';
@@ -371,7 +370,7 @@ class SettingsScreen extends ConsumerWidget {
         subtitle: Text(subtitle, style: textStyles.bodySmall.copyWith(color: colors.textMuted)),
         value: value,
         onChanged: onChanged,
-        activeColor: colors.accentPurple,
+        activeThumbColor: colors.accentPurple,
       ),
     );
   }
