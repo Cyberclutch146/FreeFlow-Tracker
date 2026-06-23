@@ -10,6 +10,8 @@ import '../../widgets/common/glass_panel.dart';
 import '../../core/constants/app_constants.dart';
 import 'add_budget_sheet.dart';
 import '../../core/utils/extensions.dart';
+import '../../models/transaction.dart';
+import '../../widgets/budgets/budget_progress_bar.dart';
 
 class BudgetsView extends ConsumerWidget {
   const BudgetsView({super.key});
@@ -17,6 +19,7 @@ class BudgetsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final budgetsAsync = ref.watch(budgetsProvider);
+    final transactionsAsync = ref.watch(recentTransactionsProvider);
     final colors = context.colors;
     
     return Scaffold(
@@ -31,12 +34,18 @@ class BudgetsView extends ConsumerWidget {
             );
           }
           
-          return ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            itemCount: budgets.length,
-            itemBuilder: (context, index) {
-              return _buildBudgetCard(context, ref, budgets[index]);
+          return transactionsAsync.when(
+            data: (transactions) {
+              return ListView.builder(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+                itemCount: budgets.length,
+                itemBuilder: (context, index) {
+                  return _buildBudgetCard(context, ref, budgets[index], transactions);
+                },
+              );
             },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, s) => Center(child: Text('Error: $e')),
           );
         },
         loading: () => Center(
@@ -61,12 +70,20 @@ class BudgetsView extends ConsumerWidget {
     );
   }
 
-  Widget _buildBudgetCard(BuildContext context, WidgetRef ref, Budget b) {
+  Widget _buildBudgetCard(BuildContext context, WidgetRef ref, Budget b, List<Transaction> transactions) {
     final colors = context.colors;
     final textStyles = context.textStyles;
     
-    // Placeholder for current spent. In a real app we'd aggregate transactions.
-    final spent = b.monthlyLimit * 0.45; // Hardcoded mock value
+    // Calculate current spent this month for this category
+    final now = DateTime.now();
+    final spent = transactions
+        .where((t) => 
+            t.category == b.category && 
+            t.direction == TransactionDirection.debit &&
+            t.date.year == now.year &&
+            t.date.month == now.month)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+
     final progress = (spent / b.monthlyLimit).clamp(0.0, 1.0);
     
     Color progressColor = colors.accentTeal;
@@ -122,14 +139,9 @@ class BudgetsView extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: colors.borderMid,
-                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                  ),
+                BudgetProgressBar(
+                  progress: progress,
+                  progressColor: progressColor,
                 ),
                 const SizedBox(height: 8),
                 Text(

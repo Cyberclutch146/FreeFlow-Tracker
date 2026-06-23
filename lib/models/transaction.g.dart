@@ -91,24 +91,29 @@ const TransactionSchema = CollectionSchema(
       name: r'projectId',
       type: IsarType.string,
     ),
-    r'recurringFrequency': PropertySchema(
+    r'receiptImagePaths': PropertySchema(
       id: 14,
+      name: r'receiptImagePaths',
+      type: IsarType.stringList,
+    ),
+    r'recurringFrequency': PropertySchema(
+      id: 15,
       name: r'recurringFrequency',
       type: IsarType.string,
       enumMap: _TransactionrecurringFrequencyEnumValueMap,
     ),
     r'smsRawLogId': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'smsRawLogId',
       type: IsarType.string,
     ),
     r'studentId': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'studentId',
       type: IsarType.string,
     ),
     r'upiRefId': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'upiRefId',
       type: IsarType.string,
     )
@@ -189,6 +194,13 @@ int _transactionEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.receiptImagePaths.length * 3;
+  {
+    for (var i = 0; i < object.receiptImagePaths.length; i++) {
+      final value = object.receiptImagePaths[i];
+      bytesCount += value.length * 3;
+    }
+  }
   {
     final value = object.recurringFrequency;
     if (value != null) {
@@ -236,10 +248,11 @@ void _transactionSerialize(
   writer.writeString(offsets[11], object.note);
   writer.writeString(offsets[12], object.paymentMethod.name);
   writer.writeString(offsets[13], object.projectId);
-  writer.writeString(offsets[14], object.recurringFrequency?.name);
-  writer.writeString(offsets[15], object.smsRawLogId);
-  writer.writeString(offsets[16], object.studentId);
-  writer.writeString(offsets[17], object.upiRefId);
+  writer.writeStringList(offsets[14], object.receiptImagePaths);
+  writer.writeString(offsets[15], object.recurringFrequency?.name);
+  writer.writeString(offsets[16], object.smsRawLogId);
+  writer.writeString(offsets[17], object.studentId);
+  writer.writeString(offsets[18], object.upiRefId);
 }
 
 Transaction _transactionDeserialize(
@@ -270,11 +283,12 @@ Transaction _transactionDeserialize(
             reader.readStringOrNull(offsets[12])] ??
         PaymentMethod.upi,
     projectId: reader.readStringOrNull(offsets[13]),
+    receiptImagePaths: reader.readStringList(offsets[14]) ?? const [],
     recurringFrequency: _TransactionrecurringFrequencyValueEnumMap[
-        reader.readStringOrNull(offsets[14])],
-    smsRawLogId: reader.readStringOrNull(offsets[15]),
-    studentId: reader.readStringOrNull(offsets[16]),
-    upiRefId: reader.readStringOrNull(offsets[17]),
+        reader.readStringOrNull(offsets[15])],
+    smsRawLogId: reader.readStringOrNull(offsets[16]),
+    studentId: reader.readStringOrNull(offsets[17]),
+    upiRefId: reader.readStringOrNull(offsets[18]),
   );
   return object;
 }
@@ -323,13 +337,15 @@ P _transactionDeserializeProp<P>(
     case 13:
       return (reader.readStringOrNull(offset)) as P;
     case 14:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 15:
       return (_TransactionrecurringFrequencyValueEnumMap[
           reader.readStringOrNull(offset)]) as P;
-    case 15:
-      return (reader.readStringOrNull(offset)) as P;
     case 16:
       return (reader.readStringOrNull(offset)) as P;
     case 17:
+      return (reader.readStringOrNull(offset)) as P;
+    case 18:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2217,6 +2233,233 @@ extension TransactionQueryFilter
   }
 
   QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'receiptImagePaths',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'receiptImagePaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'receiptImagePaths',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'receiptImagePaths',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'receiptImagePaths',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      receiptImagePathsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'receiptImagePaths',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
       recurringFrequencyIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3393,6 +3636,13 @@ extension TransactionQueryWhereDistinct
   }
 
   QueryBuilder<Transaction, Transaction, QDistinct>
+      distinctByReceiptImagePaths() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'receiptImagePaths');
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QDistinct>
       distinctByRecurringFrequency({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'recurringFrequency',
@@ -3513,6 +3763,13 @@ extension TransactionQueryProperty
   QueryBuilder<Transaction, String?, QQueryOperations> projectIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'projectId');
+    });
+  }
+
+  QueryBuilder<Transaction, List<String>, QQueryOperations>
+      receiptImagePathsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'receiptImagePaths');
     });
   }
 

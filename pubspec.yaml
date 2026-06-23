@@ -59,6 +59,9 @@ dependencies:
   google_generative_ai: ^0.4.6
   pdf: ^3.12.0
   printing: ^5.14.3
+  local_auth: ^3.0.1
+  image_picker: ^1.2.2
+  home_widget: ^0.9.3
 
 dev_dependencies:
   flutter_test:

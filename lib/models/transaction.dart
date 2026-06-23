@@ -21,6 +21,8 @@ class Transaction {
   
   String? note;
   
+  List<String> receiptImagePaths = [];
+  
   @Index()
   DateTime date;
   
@@ -50,6 +52,7 @@ class Transaction {
     required this.direction,
     required this.category,
     this.note,
+    this.receiptImagePaths = const [],
     required this.date,
     required this.paymentMethod,
     this.projectId,
@@ -71,6 +74,7 @@ class Transaction {
       direction: TransactionDirection.values.firstWhere((e) => e.name == json['direction']),
       category: Category.values.firstWhere((e) => e.name == json['category']),
       note: json['note'] as String?,
+      receiptImagePaths: (json['receiptImagePaths'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       date: DateTime.parse(json['date'] as String),
       paymentMethod: PaymentMethod.values.firstWhere((e) => e.name == json['paymentMethod']),
       projectId: json['projectId'] as String?,
@@ -94,6 +98,7 @@ class Transaction {
     'direction': direction.name,
     'category': category.name,
     'note': note,
+    'receiptImagePaths': receiptImagePaths,
     'date': date.toIso8601String(),
     'paymentMethod': paymentMethod.name,
     'projectId': projectId,
@@ -114,6 +119,7 @@ class Transaction {
     TransactionDirection? direction,
     Category? category,
     String? note,
+    List<String>? receiptImagePaths,
     DateTime? date,
     PaymentMethod? paymentMethod,
     String? projectId,
@@ -133,6 +139,7 @@ class Transaction {
       direction: direction ?? this.direction,
       category: category ?? this.category,
       note: note ?? this.note,
+      receiptImagePaths: receiptImagePaths ?? this.receiptImagePaths,
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       projectId: projectId ?? this.projectId,

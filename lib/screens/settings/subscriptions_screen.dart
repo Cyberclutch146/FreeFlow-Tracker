@@ -7,6 +7,8 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../widgets/common/glass_panel.dart';
+import '../../services/subscription_scanner_service.dart';
+import '../../models/transaction.dart';
 
 class SubscriptionsScreen extends ConsumerWidget {
   const SubscriptionsScreen({super.key});
@@ -27,6 +29,8 @@ class SubscriptionsScreen extends ConsumerWidget {
       ),
       body: transactionsAsync.when(
         data: (transactions) {
+          final suggestions = SubscriptionScannerService.findPotentialSubscriptions(transactions);
+          
           // Find subscriptions
           final subTxns = transactions.where((t) => t.category == Category.subscriptions).toList();
           
@@ -68,6 +72,54 @@ class SubscriptionsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 32),
+              if (suggestions.isNotEmpty) ...[
+                Text('Suggested Subscriptions', style: textStyles.headingMedium),
+                const SizedBox(height: 16),
+                ...suggestions.map((s) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GlassPanel(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.lightbulb_outline, color: colors.accentTeal),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(s.merchantName, style: textStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+                              ),
+                              Text(
+                                CurrencyFormatter.format(s.amount),
+                                style: textStyles.bodyLarge.copyWith(color: colors.textPrimary),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () async {
+                                  // Add them to subscriptions
+                                  final repo = ref.read(transactionRepositoryProvider);
+                                  for (var t in s.matchingTransactions) {
+                                    final updated = t.copyWith(category: Category.subscriptions);
+                                    await repo.save(updated);
+                                  }
+                                },
+                                child: Text('Add as Subscription', style: TextStyle(color: colors.accentTeal)),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 32),
+              ],
               Text('Active Services', style: textStyles.headingMedium),
               const SizedBox(height: 16),
               ...subs.entries.map((e) {

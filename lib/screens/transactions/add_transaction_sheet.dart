@@ -10,7 +10,10 @@ import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/extensions.dart';
 import 'package:intl/intl.dart';
-
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final Transaction? existingTransaction;
   const AddTransactionSheet({super.key, this.existingTransaction});
@@ -35,6 +38,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   late Category _category;
   late PaymentMethod _paymentMethod;
   late DateTime _date;
+  List<String> _receiptImagePaths = [];
 
   @override
   void initState() {
@@ -46,6 +50,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     _category = t?.category ?? Category.food;
     _paymentMethod = t?.paymentMethod ?? PaymentMethod.upi;
     _date = t?.date ?? DateTime.now();
+    _receiptImagePaths = List.from(t?.receiptImagePaths ?? []);
   }
 
   @override
@@ -74,6 +79,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       isRecurring: widget.existingTransaction?.isRecurring ?? false,
       confidence: widget.existingTransaction?.confidence ?? Confidence.high,
       isConfirmed: true,
+      receiptImagePaths: _receiptImagePaths,
     );
 
     await repo.save(transaction);
@@ -106,6 +112,27 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     if (picked != null && picked != _date) {
       setState(() => _date = picked);
     }
+  }
+
+  Future<void> _pickReceipt() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (pickedFile != null) {
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName = '${const Uuid().v4()}${path.extension(pickedFile.path)}';
+      final savedImage = await File(pickedFile.path).copy('${appDir.path}/$fileName');
+      
+      setState(() {
+        _receiptImagePaths.add(savedImage.path);
+      });
+    }
+  }
+
+  void _removeReceipt(int index) {
+    setState(() {
+      _receiptImagePaths.removeAt(index);
+    });
   }
 
   @override
@@ -270,6 +297,60 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: colors.accentPurple),
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Receipts', style: TextStyle(color: colors.textMuted, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 80,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _receiptImagePaths.length + 1,
+              itemBuilder: (context, index) {
+                if (index == _receiptImagePaths.length) {
+                  return GestureDetector(
+                    onTap: _pickReceipt,
+                    child: Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: colors.backgroundElevated,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.borderMid, style: BorderStyle.solid),
+                      ),
+                      child: Icon(Icons.add_a_photo, color: colors.textMuted),
+                    ),
+                  );
+                }
+                
+                final imgPath = _receiptImagePaths[index];
+                return Container(
+                  width: 80,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: FileImage(File(imgPath)),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: GestureDetector(
+                      onTap: () => _removeReceipt(index),
+                      child: Container(
+                        margin: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, size: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 32),
