@@ -34,7 +34,7 @@ class _AddBudgetSheetState extends ConsumerState<AddBudgetSheet> {
   void initState() {
     super.initState();
     final b = widget.existingBudget;
-    _limitController = TextEditingController(text: b != null ? b.limitAmount.toString() : '');
+    _limitController = TextEditingController(text: b != null ? b.monthlyLimit.toString() : '');
     _category = b?.category ?? Category.food;
   }
 
@@ -57,10 +57,9 @@ class _AddBudgetSheetState extends ConsumerState<AddBudgetSheet> {
     final budget = Budget(
       id: widget.existingBudget?.id ?? const Uuid().v4(),
       category: _category,
-      limitAmount: limit,
+      monthlyLimit: limit,
       month: widget.existingBudget?.month ?? now.month,
       year: widget.existingBudget?.year ?? now.year,
-      createdAt: widget.existingBudget?.createdAt ?? now,
     );
 
     await repo.save(budget);

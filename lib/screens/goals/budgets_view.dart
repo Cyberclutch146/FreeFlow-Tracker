@@ -66,8 +66,8 @@ class BudgetsView extends ConsumerWidget {
     final textStyles = context.textStyles;
     
     // Placeholder for current spent. In a real app we'd aggregate transactions.
-    final spent = b.limitAmount * 0.45; // Hardcoded mock value
-    final progress = (spent / b.limitAmount).clamp(0.0, 1.0);
+    final spent = b.monthlyLimit * 0.45; // Hardcoded mock value
+    final progress = (spent / b.monthlyLimit).clamp(0.0, 1.0);
     
     Color progressColor = colors.accentTeal;
     if (progress > AppConstants.kBudgetWarningThreshold) {
@@ -112,7 +112,7 @@ class BudgetsView extends ConsumerWidget {
                       style: textStyles.headingLarge,
                     ),
                     Text(
-                      '${CurrencyFormatter.format(spent)} / ${CurrencyFormatter.format(b.limitAmount)}',
+                      '${CurrencyFormatter.format(spent)} / ${CurrencyFormatter.format(b.monthlyLimit)}',
                       style: TextStyle(
                         color: progressColor,
                         fontWeight: FontWeight.w700,
@@ -133,7 +133,7 @@ class BudgetsView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Remaining: ${CurrencyFormatter.format(b.limitAmount - spent)}',
+                  'Remaining: ${CurrencyFormatter.format(b.monthlyLimit - spent)}',
                   style: textStyles.bodySmall.copyWith(color: colors.textMuted),
                 ),
               ],

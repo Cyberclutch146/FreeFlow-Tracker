@@ -8,6 +8,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -75,7 +76,14 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  ...transactions.take(5).map((t) => _buildTransactionTile(context, t)).toList(),
+                  ...transactions.take(5).toList().asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    var t = entry.value;
+                    return _buildTransactionTile(context, t)
+                        .animate()
+                        .fadeIn(delay: (300 + idx * 100).ms)
+                        .slideY(begin: 0.2);
+                  }),
               ],
             ),
           );
