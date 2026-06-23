@@ -28,6 +28,8 @@ import '../theme/theme_config.dart';
 import '../../services/ai/gemini_service.dart';
 import '../../screens/ai/ai_chat_screen.dart';
 import '../../screens/ai/ai_report_screen.dart';
+import '../../screens/income/project_detail_screen.dart';
+import '../../screens/income/student_detail_screen.dart';
 import '../../models/insight_card.dart';
 import '../../models/advisor_card.dart';
 
@@ -172,6 +174,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/ai-chat', builder: (context, state) => const AiChatScreen()),
       GoRoute(path: '/ai-report', builder: (context, state) => const AiReportScreen()),
+      GoRoute(path: '/project-detail/:id', builder: (context, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!)),
+      GoRoute(path: '/student-detail/:id', builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!)),
     ],
   );
 });

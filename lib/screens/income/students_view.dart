@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -81,7 +82,7 @@ class StudentsView extends ConsumerWidget {
       },
       child: GestureDetector(
         onTap: () {
-          AddStudentSheet.show(context, existingStudent: s);
+          GoRouter.of(context).push('/student-detail/${s.id}');
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),

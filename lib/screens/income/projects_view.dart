@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -96,7 +97,7 @@ class ProjectsView extends ConsumerWidget {
       },
       child: GestureDetector(
         onTap: () {
-          AddProjectSheet.show(context, existingProject: p);
+          GoRouter.of(context).push('/project-detail/${p.id}');
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
