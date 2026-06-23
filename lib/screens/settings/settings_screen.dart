@@ -181,41 +181,11 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _buildPreferenceTile(
                 context: context,
-                icon: Icons.key_rounded,
-                title: 'Gemini API Key',
-                subtitle: settings.geminiApiKey != null && settings.geminiApiKey!.isNotEmpty
-                    ? '••••••••${settings.geminiApiKey!.substring(settings.geminiApiKey!.length > 4 ? settings.geminiApiKey!.length - 4 : 0)}'
-                    : 'Not configured',
-                onTap: () {
-                  final controller = TextEditingController(text: settings.geminiApiKey ?? '');
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: colors.backgroundElevated,
-                      title: Text('Gemini API Key', style: textStyles.headingMedium),
-                      content: TextField(
-                        controller: controller,
-                        style: TextStyle(color: colors.textPrimary, fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText: 'AIza...',
-                          hintStyle: TextStyle(color: colors.textMuted),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(settingsRepositoryProvider).update((s) => s.copyWith(geminiApiKey: controller.text.trim()));
-                            Navigator.pop(ctx);
-                          },
-                          child: Text('Save', style: TextStyle(color: colors.accentPurple, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ).animate().fadeIn(delay: 640.ms).slideY(begin: 0.2),
+                icon: Icons.offline_bolt_rounded,
+                title: 'AI Status',
+                subtitle: '✅ Offline AI active — no API key needed',
+                onTap: () {},
+              ).animate().fadeIn(delay: 630.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               _buildActionTile(
                 context: context,
@@ -223,7 +193,7 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Chat with AI Assistant',
                 color: colors.accentPurple,
                 onTap: () => context.push('/ai-chat'),
-              ).animate().fadeIn(delay: 660.ms).slideY(begin: 0.2),
+              ).animate().fadeIn(delay: 650.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               _buildActionTile(
                 context: context,
@@ -231,8 +201,9 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Generate AI Report',
                 color: colors.accentTeal,
                 onTap: () => context.push('/ai-report'),
-              ).animate().fadeIn(delay: 680.ms).slideY(begin: 0.2),
+              ).animate().fadeIn(delay: 665.ms).slideY(begin: 0.2),
               const SizedBox(height: 32),
+
 
               Text('Data', style: textStyles.headingMedium).animate().fadeIn(delay: 700.ms).slideY(begin: 0.2),
               const SizedBox(height: 16),

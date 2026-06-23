@@ -31,7 +31,7 @@ import '../../models/savings_goal.dart';
 import '../../models/budget.dart';
 import '../../core/constants/app_constants.dart';
 import '../theme/theme_config.dart';
-import '../../services/ai/gemini_service.dart';
+import '../../services/ai/offline_ai_service.dart';
 import '../../screens/ai/ai_chat_screen.dart';
 import '../../screens/ai/ai_report_screen.dart';
 import '../../screens/income/project_detail_screen.dart';
@@ -120,16 +120,8 @@ final insightsEngineProvider = Provider((ref) => InsightsEngine());
 
 final savingsAdvisorProvider = Provider((ref) => SavingsAdvisor());
 
-final geminiServiceProvider = Provider((ref) {
-  final gemini = GeminiService();
-  // API key will be configured from settings
-  final settingsAsync = ref.watch(settingsProvider);
-  final apiKey = settingsAsync.valueOrNull?.geminiApiKey;
-  if (apiKey != null && apiKey.isNotEmpty) {
-    gemini.configure(apiKey);
-  }
-  return gemini;
-});
+/// Offline AI — always ready, no API key needed.
+final geminiServiceProvider = Provider((ref) => OfflineAIService());
 
 final settingsProvider = StreamProvider<AppSettings>((ref) {
   return ref.watch(settingsRepositoryProvider).watch();

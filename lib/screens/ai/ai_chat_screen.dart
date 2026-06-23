@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -32,7 +33,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   void initState() {
     super.initState();
     _messages.add(ChatMessage(
-      text: 'Hey! 👋 I\'m your AI financial assistant. Ask me anything about your spending, income, savings goals, or budgets.\n\nTry:\n• "How am I doing this month?"\n• "Where is my money going?"\n• "Should I cut back on anything?"',
+      text: 'Hey! 👋 I\'m your offline AI financial assistant — no API key needed, all data stays on your device!\n\nTry:\n• "How am I doing this month?"\n• "Budget status"\n• "Where\'s my money going?"\n• "Compare to last month"',
       isUser: false,
     ));
   }
@@ -99,7 +100,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textStyles = context.textStyles;
-    final gemini = ref.watch(geminiServiceProvider);
 
     return Scaffold(backgroundColor: colors.backgroundPrimary, 
       
@@ -138,25 +138,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       ),
       body: Column(
         children: [
-          if (!gemini.isConfigured)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: GlassPanel(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.key_rounded, color: colors.accentRed),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Add your Gemini API key in Settings to enable AI features.',
-                        style: textStyles.bodySmall.copyWith(color: colors.accentRed),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn().shake(),
+          // No API key banner needed — always online!
 
           // Messages
           Expanded(
@@ -173,20 +155,22 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
           ),
 
-          // Quick Actions
           if (_messages.length <= 2)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 children: [
-                  _buildQuickAction('How am I doing?', colors),
-                  _buildQuickAction('Top expenses', colors),
-                  _buildQuickAction('Budget check', colors),
-                  _buildQuickAction('Savings advice', colors),
+                  _buildQuickAction('📊 Monthly snapshot', colors),
+                  _buildQuickAction('💸 Where\'s my money going?', colors),
+                  _buildQuickAction('📋 Budget status', colors),
+                  _buildQuickAction('💡 How can I save more?', colors),
+                  _buildQuickAction('📈 Compare to last month', colors),
+                  _buildQuickAction('🎯 Goal progress', colors),
                 ],
               ),
             ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.3),
+
 
           // Input
           Container(
@@ -232,7 +216,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       ),
     );
   }
-
   Widget _buildMessageBubble(ChatMessage msg, AppColors colors, AppTextStyles textStyles) {
     return Padding(
       padding: EdgeInsets.only(
@@ -258,16 +241,36 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               color: msg.isUser ? colors.accentPurple.withValues(alpha: 0.3) : colors.borderSubtle,
             ),
           ),
-          child: Text(
-            msg.text,
-            style: textStyles.bodyMedium.copyWith(
-              color: colors.textPrimary,
-              height: 1.5,
-            ),
-          ),
+          child: msg.isUser 
+            ? Text(
+                msg.text,
+                style: textStyles.bodyMedium.copyWith(
+                  color: colors.textPrimary,
+                  height: 1.5,
+                ),
+              )
+            : MarkdownBody(
+                data: msg.text,
+                styleSheet: _buildMarkdownStyle(colors, textStyles),
+              ),
         ),
       ),
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);
+  }
+  MarkdownStyleSheet _buildMarkdownStyle(AppColors colors, AppTextStyles textStyles) {
+    return MarkdownStyleSheet(
+      p: textStyles.bodyMedium.copyWith(color: colors.textPrimary, height: 1.6, fontSize: 13.5),
+      strong: textStyles.bodyMedium.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w700, fontSize: 13.5),
+      h2: textStyles.bodyLarge.copyWith(color: colors.accentPurple, fontWeight: FontWeight.w700, fontSize: 14),
+      listBullet: textStyles.bodyMedium.copyWith(color: colors.accentTeal, fontSize: 13.5),
+      code: textStyles.bodySmall.copyWith(color: colors.accentTeal, fontFamily: 'monospace', fontSize: 12),
+      horizontalRuleDecoration: BoxDecoration(border: Border(bottom: BorderSide(color: colors.borderSubtle))),
+      tableBorder: TableBorder.all(color: colors.borderSubtle, width: 0.5),
+      tableHead: textStyles.bodySmall.copyWith(color: colors.textMuted, fontWeight: FontWeight.w700, fontSize: 11),
+      tableBody: textStyles.bodyMedium.copyWith(color: colors.textPrimary, fontSize: 13),
+      tableCellsPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      pPadding: const EdgeInsets.only(bottom: 2),
+    );
   }
 
   Widget _buildTypingIndicator(AppColors colors) {
