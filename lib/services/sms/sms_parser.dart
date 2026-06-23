@@ -76,12 +76,13 @@ class SmsParser {
     if (sender.contains('AXIS')) return 'Axis Bank';
     if (sender.contains('KOTAK')) return 'Kotak Bank';
     if (sender.contains('PAYTM')) return 'Paytm';
+    if (sender.contains('PNB') || sender.contains('PUNJAB')) return 'PNB';
     return 'Unknown Bank';
   }
 
   static double? _extractAmount(String body) {
-    // Matches Rs. 100, Rs 100, INR 100, Rs.100.50
-    final RegExp amountRegExp = RegExp(r'(?:rs\.?|inr)\s*([\d,]+\.?\d*)');
+    // Matches Rs. 100, Rs 100, INR 100, Rs.100.50, and handles commas like 1,00,000.50
+    final RegExp amountRegExp = RegExp(r'(?:rs\.?|inr)\s*([\d,]+\.?\d*)', caseSensitive: false);
     final match = amountRegExp.firstMatch(body);
     if (match != null && match.group(1) != null) {
       String amountStr = match.group(1)!.replaceAll(',', '');
@@ -93,23 +94,35 @@ class SmsParser {
   static String? _extractMerchant(String body, TransactionDirection direction) {
     String? merchant;
     if (direction == TransactionDirection.debit) {
-      // Look for "to " or "at " or "for "
-      final toMatch = RegExp(r'to\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-      if (toMatch != null) merchant = toMatch.group(1)?.trim();
-      
-      if (merchant == null) {
-        final atMatch = RegExp(r'at\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-        if (atMatch != null) merchant = atMatch.group(1)?.trim();
+      // Look for "to " or "at " or "for " or UPI VPA
+      final upiMatch = RegExp(r'(?:\s+to\s+|\s+vpa\s+|\s+upi\s+)([a-zA-Z0-9\.\-@]+)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
+      if (upiMatch != null && upiMatch.group(1)!.contains('@')) {
+         merchant = upiMatch.group(1)?.trim();
+      } else {
+        final toMatch = RegExp(r'to\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
+        if (toMatch != null) merchant = toMatch.group(1)?.trim();
+        
+        if (merchant == null) {
+          final atMatch = RegExp(r'at\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
+          if (atMatch != null) merchant = atMatch.group(1)?.trim();
+        }
       }
     } else {
-      // Look for "from " or "by "
-      final fromMatch = RegExp(r'from\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-      if (fromMatch != null) merchant = fromMatch.group(1)?.trim();
+      // Look for "from " or "by " or UPI VPA
+      final upiMatch = RegExp(r'(?:\s+from\s+|\s+by\s+|\s+vpa\s+)([a-zA-Z0-9\.\-@]+)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
+      if (upiMatch != null && upiMatch.group(1)!.contains('@')) {
+         merchant = upiMatch.group(1)?.trim();
+      } else {
+        final fromMatch = RegExp(r'from\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
+        if (fromMatch != null) merchant = fromMatch.group(1)?.trim();
+      }
     }
     
     // Clean up
     if (merchant != null) {
       if (merchant.length < 3) return null;
+      // If it's a VPA, keep lowercase
+      if (merchant.contains('@')) return merchant.toLowerCase();
       // uppercase first letters
       return merchant.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
     }

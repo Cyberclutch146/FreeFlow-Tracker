@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/pdf/invoice_service.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -163,6 +164,17 @@ class ProjectDetailScreen extends ConsumerWidget {
                 
                 Text('Actions', style: textStyles.headingMedium).animate().fadeIn(delay: 300.ms),
                 const SizedBox(height: 16),
+                
+                _buildActionButton(
+                  context,
+                  icon: Icons.picture_as_pdf_rounded,
+                  label: 'Export Invoice (PDF)',
+                  color: colors.accentAmber,
+                  onTap: () {
+                    InvoiceService.generateAndShareInvoice(project);
+                  },
+                ).animate().fadeIn(delay: 350.ms).slideY(begin: 0.1),
+                const SizedBox(height: 12),
                 
                 _buildActionButton(
                   context,

@@ -43,7 +43,35 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Monthly Income Target',
                 subtitle: '₹${settings.monthlyIncomeTarget.toStringAsFixed(0)}',
                 onTap: () {
-                  // TODO: Show target update dialog
+                  final controller = TextEditingController(text: settings.monthlyIncomeTarget.toStringAsFixed(0));
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: colors.backgroundElevated,
+                      title: Text('Income Target', style: textStyles.headingMedium),
+                      content: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: colors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Enter amount',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
+                        TextButton(
+                          onPressed: () {
+                            final val = double.tryParse(controller.text) ?? 0;
+                            ref.read(settingsRepositoryProvider).update((s) => s.copyWith(monthlyIncomeTarget: val));
+                            Navigator.pop(ctx);
+                          },
+                          child: Text('Save', style: TextStyle(color: colors.accentPurple, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
@@ -53,13 +81,51 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Budget Reset Day',
                 subtitle: '${settings.budgetResetDay} of every month',
                 onTap: () {
-                  // TODO: Show reset day picker
+                  final controller = TextEditingController(text: settings.budgetResetDay.toString());
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: colors.backgroundElevated,
+                      title: Text('Reset Day (1-31)', style: textStyles.headingMedium),
+                      content: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: colors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Enter day',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
+                        TextButton(
+                          onPressed: () {
+                            int val = int.tryParse(controller.text) ?? 1;
+                            if (val < 1) val = 1;
+                            if (val > 31) val = 31;
+                            ref.read(settingsRepositoryProvider).update((s) => s.copyWith(budgetResetDay: val));
+                            Navigator.pop(ctx);
+                          },
+                          child: Text('Save', style: TextStyle(color: colors.accentPurple, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
               const SizedBox(height: 32),
 
-              Text('Integrations', style: textStyles.headingMedium).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
+              Text('Integrations & Managers', style: textStyles.headingMedium).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
               const SizedBox(height: 16),
+              _buildActionTile(
+                context: context,
+                icon: Icons.autorenew_rounded,
+                title: 'Subscriptions Manager',
+                color: colors.accentAmber,
+                onTap: () => context.push('/subscriptions'),
+              ).animate().fadeIn(delay: 550.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
               _buildToggleTile(
                 context: context,
                 icon: Icons.sms_rounded,

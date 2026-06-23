@@ -17,6 +17,7 @@ import '../../screens/income/income_screen.dart';
 import '../../screens/goals/goals_screen.dart';
 import '../../screens/reports/reports_screen.dart';
 import '../../screens/settings/settings_screen.dart';
+import '../../screens/settings/subscriptions_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/app_settings.dart';
 import '../../models/project.dart';
@@ -175,6 +176,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/ai-report', builder: (context, state) => const AiReportScreen()),
       GoRoute(path: '/project-detail/:id', builder: (context, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!)),
       GoRoute(path: '/student-detail/:id', builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!)),
+      GoRoute(path: '/subscriptions', builder: (context, state) => const SubscriptionsScreen()),
     ],
   );
 });

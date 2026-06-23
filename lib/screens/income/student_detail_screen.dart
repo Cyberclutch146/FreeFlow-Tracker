@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../models/transaction.dart';
+import '../../core/constants/app_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -127,8 +129,21 @@ class StudentDetailScreen extends ConsumerWidget {
                 
                 GestureDetector(
                   onTap: () {
+                    final tx = Transaction(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      amount: student.feePerSession,
+                      date: DateTime.now(),
+                      merchantName: 'Tutoring: ${student.name}',
+                      category: Category.income,
+                      direction: TransactionDirection.credit,
+                      isConfirmed: true,
+                      isRecurring: false,
+                      confidence: Confidence.high,
+                      paymentMethod: PaymentMethod.cash, // default to cash
+                    );
+                    ref.read(transactionRepositoryProvider).save(tx);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Log session feature coming soon!'), backgroundColor: colors.accentAmber),
+                      SnackBar(content: Text('Session logged for ₹${student.feePerSession}!'), backgroundColor: colors.accentAmber),
                     );
                   },
                   child: GlassPanel(

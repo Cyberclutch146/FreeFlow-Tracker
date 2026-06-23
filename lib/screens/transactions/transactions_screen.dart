@@ -10,11 +10,66 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_panel.dart';
 import 'add_transaction_sheet.dart';
 
-class TransactionsScreen extends ConsumerWidget {
+class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
+}
+
+class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
+  TransactionDirection? _filterDirection;
+
+  void _showFilterSheet(BuildContext context, AppColors colors, AppTextStyles textStyles) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.backgroundSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Filter Transactions', style: textStyles.headingLarge),
+              const SizedBox(height: 16),
+              ListTile(
+                title: Text('All', style: textStyles.bodyLarge),
+                trailing: _filterDirection == null ? Icon(Icons.check, color: colors.accentPurple) : null,
+                onTap: () {
+                  setState(() => _filterDirection = null);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: Text('Income Only', style: textStyles.bodyLarge),
+                trailing: _filterDirection == TransactionDirection.credit ? Icon(Icons.check, color: colors.accentPurple) : null,
+                onTap: () {
+                  setState(() => _filterDirection = TransactionDirection.credit);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: Text('Expenses Only', style: textStyles.bodyLarge),
+                trailing: _filterDirection == TransactionDirection.debit ? Icon(Icons.check, color: colors.accentPurple) : null,
+                onTap: () {
+                  setState(() => _filterDirection = TransactionDirection.debit);
+                  Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
     final colors = context.colors;
     final textStyles = context.textStyles;
@@ -26,19 +81,19 @@ class TransactionsScreen extends ConsumerWidget {
         
         actions: [
           IconButton(
-            icon: Icon(Icons.filter_list_rounded, color: colors.textPrimary),
-            onPressed: () {
-              // TODO: Implement filter functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Filter coming soon')),
-              );
-            },
+            icon: Icon(Icons.filter_list_rounded, color: _filterDirection != null ? colors.accentPurple : colors.textPrimary),
+            onPressed: () => _showFilterSheet(context, colors, textStyles),
           ),
         ],
       ),
       body: transactionsAsync.when(
         data: (transactions) {
-          if (transactions.isEmpty) {
+          final filtered = transactions.where((t) {
+            if (_filterDirection == null) return true;
+            return t.direction == _filterDirection;
+          }).toList();
+
+          if (filtered.isEmpty) {
             return const EmptyState(
               icon: Icons.receipt_long_rounded,
               title: 'No transactions yet.',
@@ -48,9 +103,9 @@ class TransactionsScreen extends ConsumerWidget {
           
           return ListView.builder(
             padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            itemCount: transactions.length,
+            itemCount: filtered.length,
             itemBuilder: (context, index) {
-              final t = transactions[index];
+              final t = filtered[index];
               return _buildTransactionTile(context, ref, t);
             },
           );
