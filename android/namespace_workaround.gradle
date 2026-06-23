@@ -1,0 +1,13 @@
+afterEvaluate { project ->
+    if (project.hasProperty('android')) {
+        project.android {
+            if (namespace == null) {
+                def ns = project.group.toString()
+                if (ns.isEmpty()) {
+                    ns = project.name
+                }
+                namespace ns
+            }
+        }
+    }
+}

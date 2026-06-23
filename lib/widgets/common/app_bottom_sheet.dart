@@ -11,7 +11,8 @@ class AppBottomSheet {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.backgroundSurface,
+      useRootNavigator: true,
+      backgroundColor: context.colors.backgroundSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -28,7 +29,7 @@ class AppBottomSheet {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderMid,
+                  color: context.colors.borderMid,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -36,7 +37,7 @@ class AppBottomSheet {
               if (title != null) ...[
                 Text(
                   title,
-                  style: AppTextStyles.headingMedium,
+                  style: context.textStyles.headingMedium,
                 ),
                 const SizedBox(height: 24),
               ],

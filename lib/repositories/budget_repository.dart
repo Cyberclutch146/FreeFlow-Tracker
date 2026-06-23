@@ -53,4 +53,13 @@ class BudgetRepository {
       rethrow;
     }
   }
+
+  Stream<List<Budget>> watchAll() async* {
+    try {
+      final isar = await DatabaseService.instance;
+      yield* isar.budgets.where().watch(fireImmediately: true);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

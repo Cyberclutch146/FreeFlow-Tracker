@@ -37,4 +37,13 @@ class SettingsRepository {
       rethrow;
     }
   }
+
+  Stream<AppSettings> watch() async* {
+    try {
+      final isar = await DatabaseService.instance;
+      yield* isar.appSettings.where().watch(fireImmediately: true).map((list) => list.first);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

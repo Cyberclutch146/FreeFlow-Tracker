@@ -8,15 +8,18 @@ import '../../widgets/common/app_bottom_sheet.dart';
 import '../../widgets/common/app_button.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/extensions.dart';
+import 'package:intl/intl.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
-  const AddTransactionSheet({super.key});
+  final Transaction? existingTransaction;
+  const AddTransactionSheet({super.key, this.existingTransaction});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {Transaction? existingTransaction}) {
     return AppBottomSheet.show(
       context,
-      title: 'Add Transaction',
-      child: const AddTransactionSheet(),
+      title: existingTransaction == null ? 'Add Transaction' : 'Edit Transaction',
+      child: AddTransactionSheet(existingTransaction: existingTransaction),
     );
   }
 
@@ -25,13 +28,25 @@ class AddTransactionSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
+  late TextEditingController _amountController;
+  late TextEditingController _noteController;
   
-  TransactionDirection _direction = TransactionDirection.debit;
-  Category _category = Category.food;
-  PaymentMethod _paymentMethod = PaymentMethod.upi;
-  DateTime _date = DateTime.now();
+  late TransactionDirection _direction;
+  late Category _category;
+  late PaymentMethod _paymentMethod;
+  late DateTime _date;
+
+  @override
+  void initState() {
+    super.initState();
+    final t = widget.existingTransaction;
+    _amountController = TextEditingController(text: t != null ? t.amount.toString() : '');
+    _noteController = TextEditingController(text: t?.note ?? '');
+    _direction = t?.direction ?? TransactionDirection.debit;
+    _category = t?.category ?? Category.food;
+    _paymentMethod = t?.paymentMethod ?? PaymentMethod.upi;
+    _date = t?.date ?? DateTime.now();
+  }
 
   @override
   void dispose() {
@@ -49,15 +64,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
     final repo = ref.read(transactionRepositoryProvider);
     final transaction = Transaction(
-      id: const Uuid().v4(),
+      id: widget.existingTransaction?.id ?? const Uuid().v4(),
       amount: amount,
       direction: _direction,
       category: _category,
       note: _noteController.text.trim(),
       date: _date,
       paymentMethod: _paymentMethod,
-      isRecurring: false,
-      confidence: Confidence.high,
+      isRecurring: widget.existingTransaction?.isRecurring ?? false,
+      confidence: widget.existingTransaction?.confidence ?? Confidence.high,
       isConfirmed: true,
     );
 
@@ -67,8 +82,37 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     }
   }
 
+  Future<void> _pickDate() async {
+    final colors = context.colors;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: colors.accentPurple,
+              onPrimary: colors.textPrimary,
+              surface: colors.backgroundSurface,
+              onSurface: colors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _date) {
+      setState(() => _date = picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -81,10 +125,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   label: const Text('Expense'),
                   selected: _direction == TransactionDirection.debit,
                   onSelected: (val) => setState(() => _direction = TransactionDirection.debit),
-                  selectedColor: AppColors.accentRed.withOpacity(0.2),
-                  backgroundColor: AppColors.backgroundPrimary,
+                  selectedColor: colors.accentRed.withValues(alpha: 0.2),
+                  backgroundColor: colors.backgroundPrimary,
+                  side: BorderSide(color: _direction == TransactionDirection.debit ? colors.accentRed : colors.borderMid),
                   labelStyle: TextStyle(
-                    color: _direction == TransactionDirection.debit ? AppColors.accentRed : AppColors.textMuted,
+                    color: _direction == TransactionDirection.debit ? colors.accentRed : colors.textMuted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -95,10 +140,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   label: const Text('Income'),
                   selected: _direction == TransactionDirection.credit,
                   onSelected: (val) => setState(() => _direction = TransactionDirection.credit),
-                  selectedColor: AppColors.accentTeal.withOpacity(0.2),
-                  backgroundColor: AppColors.backgroundPrimary,
+                  selectedColor: colors.accentTeal.withValues(alpha: 0.2),
+                  backgroundColor: colors.backgroundPrimary,
+                  side: BorderSide(color: _direction == TransactionDirection.credit ? colors.accentTeal : colors.borderMid),
                   labelStyle: TextStyle(
-                    color: _direction == TransactionDirection.credit ? AppColors.accentTeal : AppColors.textMuted,
+                    color: _direction == TransactionDirection.credit ? colors.accentTeal : colors.textMuted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -109,59 +155,126 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-            decoration: const InputDecoration(
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colors.textPrimary),
+            decoration: InputDecoration(
               prefixText: '₹ ',
-              prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textMuted),
+              prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colors.textMuted),
               hintText: '0',
               border: InputBorder.none,
             ),
           ),
           const SizedBox(height: 24),
-          DropdownButtonFormField<Category>(
-            value: _category,
-            dropdownColor: AppColors.backgroundSurface,
-            decoration: InputDecoration(
-              labelText: 'Category',
-              labelStyle: const TextStyle(color: AppColors.textMuted),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.borderMid),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<Category>(
+                  value: _category,
+                  isExpanded: true,
+                  dropdownColor: colors.backgroundSurface,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    labelStyle: TextStyle(color: colors.textMuted),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.borderMid),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.accentPurple),
+                    ),
+                  ),
+                  items: Category.values.map((c) {
+                    return DropdownMenuItem(
+                      value: c,
+                      child: Text(
+                        c.name.capitalize(),
+                        style: textStyles.bodyLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _category = val);
+                  },
+                ),
               ),
-              focusedBorder: OutlineInputBorder(
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<PaymentMethod>(
+                  value: _paymentMethod,
+                  isExpanded: true,
+                  dropdownColor: colors.backgroundSurface,
+                  decoration: InputDecoration(
+                    labelText: 'Method',
+                    labelStyle: TextStyle(color: colors.textMuted),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.borderMid),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colors.accentPurple),
+                    ),
+                  ),
+                  items: PaymentMethod.values.map((p) {
+                    return DropdownMenuItem(
+                      value: p,
+                      child: Text(
+                        p.name.capitalize(),
+                        style: textStyles.bodyLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _paymentMethod = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: _pickDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.borderMid),
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accentPurple),
+                color: colors.backgroundElevated,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_month_rounded, color: colors.textMuted, size: 20),
+                  const SizedBox(width: 12),
+                  Text(
+                    DateFormat('dd MMM yyyy').format(_date),
+                    style: textStyles.bodyLarge,
+                  ),
+                ],
               ),
             ),
-            items: Category.values.map((c) {
-              return DropdownMenuItem(
-                value: c,
-                child: Text(c.name.toUpperCase()),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _category = val);
-            },
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _noteController,
             decoration: InputDecoration(
               labelText: 'Note (Optional)',
-              labelStyle: const TextStyle(color: AppColors.textMuted),
+              labelStyle: TextStyle(color: colors.textMuted),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.borderMid),
+                borderSide: BorderSide(color: colors.borderMid),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accentPurple),
+                borderSide: BorderSide(color: colors.accentPurple),
               ),
             ),
           ),
           const SizedBox(height: 32),
           AppButton(
-            label: 'Save Transaction',
+            label: widget.existingTransaction == null ? 'Save Transaction' : 'Update Transaction',
             onPressed: _submit,
           ),
           const SizedBox(height: 32),

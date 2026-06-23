@@ -16,6 +16,7 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
+    apply(from = "${rootProject.projectDir}/namespace_workaround.gradle")
     project.evaluationDependsOn(":app")
 }
 

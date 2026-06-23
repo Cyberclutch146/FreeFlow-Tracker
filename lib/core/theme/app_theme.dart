@@ -2,51 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
+import 'theme_config.dart';
 
 class AppTheme {
-  static ThemeData get darkTheme {
+  static ThemeData fromConfig(ThemeConfig config) {
     final base = ThemeData.dark();
+    final appColors = AppColors.fromConfig(config);
+    final appTextStyles = AppTextStyles.fromColors(appColors);
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.backgroundPrimary,
-      colorScheme: const ColorScheme.dark(
-        surface: AppColors.backgroundSurface,
-        primary: AppColors.accentPurple,
-        secondary: AppColors.accentTeal,
-        error: AppColors.accentRed,
-        onSurface: AppColors.textPrimary,
+      scaffoldBackgroundColor: Colors.transparent, // LiquidBackground will handle this
+      colorScheme: ColorScheme.dark(
+        surface: appColors.backgroundSurface,
+        primary: appColors.accentPurple,
+        secondary: appColors.accentTeal,
+        error: appColors.accentRed,
+        onSurface: appColors.textPrimary,
       ),
+      extensions: [
+        appColors,
+        appTextStyles,
+      ],
       textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        headlineLarge: AppTextStyles.headingLarge,
-        headlineMedium: AppTextStyles.headingMedium,
-        headlineSmall: AppTextStyles.headingSmall,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.labelLarge,
-        labelSmall: AppTextStyles.labelSmall,
+        displayLarge: appTextStyles.displayLarge,
+        displayMedium: appTextStyles.displayMedium,
+        headlineLarge: appTextStyles.headingLarge,
+        headlineMedium: appTextStyles.headingMedium,
+        headlineSmall: appTextStyles.headingSmall,
+        bodyLarge: appTextStyles.bodyLarge,
+        bodyMedium: appTextStyles.bodyMedium,
+        bodySmall: appTextStyles.bodySmall,
+        labelLarge: appTextStyles.labelLarge,
+        labelSmall: appTextStyles.labelSmall,
       ),
-      cardTheme: CardTheme(
-        color: AppColors.backgroundSurface,
+      cardTheme: CardThemeData(
+        color: appColors.backgroundSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.borderSubtle, width: 1),
+          side: BorderSide(color: appColors.borderSubtle, width: 1),
         ),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.backgroundPrimary,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        titleTextStyle: AppTextStyles.headingLarge,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle: appTextStyles.headingLarge,
+        iconTheme: IconThemeData(color: appColors.textPrimary),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.backgroundSurface,
-        selectedItemColor: AppColors.accentPurple,
-        unselectedItemColor: AppColors.textMuted,
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: appColors.backgroundSurface,
+        selectedItemColor: appColors.accentPurple,
+        unselectedItemColor: appColors.textMuted,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
@@ -54,24 +62,24 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.backgroundElevated,
+        fillColor: appColors.backgroundElevated,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.borderSubtle),
+          borderSide: BorderSide(color: appColors.borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.borderSubtle),
+          borderSide: BorderSide(color: appColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.accentPurple),
+          borderSide: BorderSide(color: appColors.accentPurple),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentPurple,
-          foregroundColor: AppColors.textPrimary,
+          backgroundColor: appColors.accentPurple,
+          foregroundColor: appColors.textPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -81,17 +89,17 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.accentPurple,
+          foregroundColor: appColors.accentPurple,
         ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.borderSubtle,
+      dividerTheme: DividerThemeData(
+        color: appColors.borderSubtle,
         thickness: 1,
         space: 1,
       ),
-      snackBarTheme: const SnackBarThemeData(
-        backgroundColor: AppColors.backgroundSurface,
-        contentTextStyle: TextStyle(color: AppColors.textPrimary),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: appColors.backgroundSurface,
+        contentTextStyle: TextStyle(color: appColors.textPrimary),
         behavior: SnackBarBehavior.floating,
       ),
     );

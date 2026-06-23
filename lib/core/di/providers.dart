@@ -18,6 +18,13 @@ import '../../screens/goals/goals_screen.dart';
 import '../../screens/reports/reports_screen.dart';
 import '../../screens/settings/settings_screen.dart';
 import '../../models/transaction.dart';
+import '../../models/app_settings.dart';
+import '../../models/project.dart';
+import '../../models/student.dart';
+import '../../models/savings_goal.dart';
+import '../../models/budget.dart';
+import '../../core/constants/app_constants.dart';
+import '../theme/theme_config.dart';
 
 final databaseServiceProvider = Provider((ref) => DatabaseService());
 
@@ -45,11 +52,42 @@ final insightsEngineProvider = Provider((ref) => InsightsEngine());
 
 final savingsAdvisorProvider = Provider((ref) => SavingsAdvisor());
 
-final settingsProvider = FutureProvider((ref) =>
-  ref.read(settingsRepositoryProvider).get());
+final settingsProvider = StreamProvider<AppSettings>((ref) {
+  return ref.watch(settingsRepositoryProvider).watch();
+});
+
+final themeConfigProvider = Provider<ThemeConfig>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  final themeMode = settingsAsync.valueOrNull?.theme ?? AppThemeMode.dark;
+  
+  switch (themeMode) {
+    case AppThemeMode.dark:
+      return ThemeConfig.midnightAmethyst;
+    case AppThemeMode.oled:
+      return ThemeConfig.pureOled;
+    case AppThemeMode.light:
+      return ThemeConfig.midnightAmethyst; // Fallback, light mode is currently replaced by Matte themes
+  }
+});
 
 final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return ref.watch(transactionRepositoryProvider).watchAll();
+});
+
+final projectsProvider = StreamProvider<List<Project>>((ref) {
+  return ref.watch(projectRepositoryProvider).watchAll();
+});
+
+final studentsProvider = StreamProvider<List<Student>>((ref) {
+  return ref.watch(studentRepositoryProvider).watchAll();
+});
+
+final goalsProvider = StreamProvider<List<SavingsGoal>>((ref) {
+  return ref.watch(goalRepositoryProvider).watchAll();
+});
+
+final budgetsProvider = StreamProvider<List<Budget>>((ref) {
+  return ref.watch(budgetRepositoryProvider).watchAll();
 });
 
 final routerProvider = Provider<GoRouter>((ref) {

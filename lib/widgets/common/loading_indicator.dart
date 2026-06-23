@@ -13,12 +13,15 @@ class LoadingIndicator extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentPurple),
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(context.colors.accentPurple),
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
-            Text(message!, style: AppTextStyles.bodySmall),
+            Text(
+              message!,
+              style: context.textStyles.bodySmall,
+            ),
           ],
         ],
       ),

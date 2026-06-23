@@ -19,38 +19,40 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     if (variant == AppButtonVariant.secondary) {
       return OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.accentPurple,
-          side: const BorderSide(color: AppColors.accentPurple, width: 1),
+          foregroundColor: colors.accentPurple,
+          side: BorderSide(color: colors.accentPurple, width: 1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           minimumSize: const Size.fromHeight(52),
-          disabledForegroundColor: AppColors.textDisabled,
+          disabledForegroundColor: colors.textDisabled,
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentPurple),
+                  valueColor: AlwaysStoppedAnimation<Color>(colors.accentPurple),
                 ),
               )
             : Text(label),
       );
     }
 
-    final bgColor = variant == AppButtonVariant.danger ? AppColors.accentRed : AppColors.accentPurple;
+    final bgColor = variant == AppButtonVariant.danger ? colors.accentRed : colors.accentPurple;
     
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
-        foregroundColor: AppColors.textPrimary,
-        disabledBackgroundColor: AppColors.textDisabled.withOpacity(0.3),
-        disabledForegroundColor: AppColors.textDisabled,
+        foregroundColor: colors.textPrimary,
+        disabledBackgroundColor: colors.textDisabled.withValues(alpha: 0.3),
+        disabledForegroundColor: colors.textDisabled,
       ),
       child: isLoading
           ? const SizedBox(

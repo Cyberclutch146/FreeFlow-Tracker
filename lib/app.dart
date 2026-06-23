@@ -9,9 +9,11 @@ class FreelanceFlowApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeConfig = ref.watch(themeConfigProvider);
+    
     return MaterialApp.router(
       title: 'FreelanceFlow',
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.fromConfig(themeConfig),
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

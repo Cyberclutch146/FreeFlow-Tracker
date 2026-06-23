@@ -78,4 +78,13 @@ class StudentRepository {
       rethrow;
     }
   }
+
+  Stream<List<Student>> watchAll() async* {
+    try {
+      final isar = await DatabaseService.instance;
+      yield* isar.students.where().sortByCreatedAtDesc().watch(fireImmediately: true);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
