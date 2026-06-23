@@ -43,6 +43,10 @@ class HomeScreen extends ConsumerWidget {
             icon: Icon(Icons.notifications_outlined, color: colors.textPrimary),
             onPressed: () {},
           ),
+          IconButton(
+            icon: Icon(Icons.settings_outlined, color: colors.textPrimary),
+            onPressed: () => GoRouter.of(context).push('/settings'),
+          ),
           const SizedBox(width: 8),
         ],
       ),
