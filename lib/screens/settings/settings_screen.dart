@@ -23,7 +23,7 @@ class SettingsScreen extends ConsumerWidget {
     final textStyles = context.textStyles;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: colors.backgroundPrimary,
       appBar: AppBar(
         title: Text('Settings', style: textStyles.headingLarge),
       ),

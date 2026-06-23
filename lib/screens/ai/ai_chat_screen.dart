@@ -101,7 +101,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final textStyles = context.textStyles;
     final gemini = ref.watch(geminiServiceProvider);
 
-    return Scaffold(
+    return Scaffold(backgroundColor: colors.backgroundPrimary, 
       
       appBar: AppBar(
         title: Row(

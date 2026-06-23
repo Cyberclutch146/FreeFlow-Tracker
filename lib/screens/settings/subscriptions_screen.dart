@@ -17,7 +17,7 @@ class SubscriptionsScreen extends ConsumerWidget {
     final colors = context.colors;
     final textStyles = context.textStyles;
 
-    return Scaffold(
+    return Scaffold(backgroundColor: colors.backgroundPrimary, 
       appBar: AppBar(
         title: Text('Subscriptions', style: textStyles.headingLarge),
         leading: IconButton(

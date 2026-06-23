@@ -25,7 +25,7 @@ class StudentDetailScreen extends ConsumerWidget {
     final textStyles = context.textStyles;
 
     return LiquidBackground(
-      child: Scaffold(
+      child: Scaffold(backgroundColor: colors.backgroundPrimary, 
         
         appBar: AppBar(
           

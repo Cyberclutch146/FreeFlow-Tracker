@@ -78,7 +78,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
     final colors = context.colors;
     final textStyles = context.textStyles;
 
-    return Scaffold(
+    return Scaffold(backgroundColor: colors.backgroundPrimary, 
       
       appBar: AppBar(
         title: Row(

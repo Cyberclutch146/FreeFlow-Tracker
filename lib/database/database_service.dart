@@ -62,6 +62,16 @@ class DatabaseService {
   Future<void> clearAll() async {
     await _isar.writeTxn(() async {
       await _isar.clear();
+      // Re-initialize default settings to prevent 'Bad state: No element'
+      await _isar.appSettings.put(AppSettings(
+        id: AppConstants.kSettingsSingletonId,
+        monthlyIncomeTarget: 0.0,
+        budgetResetDay: 1,
+        theme: AppThemeMode.dark,
+        smsPermissionGranted: false,
+        onboardingComplete: false,
+        incomeSources: [],
+      ));
     });
   }
 

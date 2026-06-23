@@ -248,25 +248,43 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           LineChartBarData(
             spots: incomeSpots,
             isCurved: true,
+            preventCurveOverShooting: true,
+            curveSmoothness: 0.35,
             color: colors.accentTeal,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: colors.accentTeal.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  colors.accentTeal.withValues(alpha: 0.3),
+                  colors.accentTeal.withValues(alpha: 0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
           LineChartBarData(
             spots: expenseSpots,
             isCurved: true,
+            preventCurveOverShooting: true,
+            curveSmoothness: 0.35,
             color: colors.accentRed,
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: colors.accentRed.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  colors.accentRed.withValues(alpha: 0.3),
+                  colors.accentRed.withValues(alpha: 0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ],

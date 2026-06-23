@@ -28,7 +28,8 @@ class SmsService {
       );
 
       // We only care about bank messages, usually from alphanumeric senders
-      final cutoffDate = DateTime.now().subtract(const Duration(days: 180)); // 6 months
+      final now = DateTime.now();
+      final cutoffDate = DateTime(now.year, now.month, 1); // Start of current month
 
       for (var msg in messages) {
         if (msg.date == null || msg.address == null || msg.body == null) continue;

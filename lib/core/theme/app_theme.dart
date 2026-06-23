@@ -6,15 +6,16 @@ import 'theme_config.dart';
 
 class AppTheme {
   static ThemeData fromConfig(ThemeConfig config) {
-    final base = ThemeData.dark();
+    final isLight = config.name == 'Light Mode';
+    final base = isLight ? ThemeData.light() : ThemeData.dark();
     final appColors = AppColors.fromConfig(config);
     final appTextStyles = AppTextStyles.fromColors(appColors);
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: isLight ? Brightness.light : Brightness.dark,
       scaffoldBackgroundColor: Colors.transparent, // LiquidBackground will handle this
-      colorScheme: ColorScheme.dark(
+      colorScheme: (isLight ? const ColorScheme.light() : const ColorScheme.dark()).copyWith(
         surface: appColors.backgroundSurface,
         primary: appColors.accentPurple,
         secondary: appColors.accentTeal,
