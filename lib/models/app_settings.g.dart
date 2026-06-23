@@ -22,43 +22,48 @@ const AppSettingsSchema = CollectionSchema(
       name: r'budgetResetDay',
       type: IsarType.long,
     ),
-    r'hashCode': PropertySchema(
+    r'geminiApiKey': PropertySchema(
       id: 1,
+      name: r'geminiApiKey',
+      type: IsarType.string,
+    ),
+    r'hashCode': PropertySchema(
+      id: 2,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'id',
       type: IsarType.string,
     ),
     r'incomeSources': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'incomeSources',
       type: IsarType.stringList,
     ),
     r'lastSmsSync': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'lastSmsSync',
       type: IsarType.dateTime,
     ),
     r'monthlyIncomeTarget': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'monthlyIncomeTarget',
       type: IsarType.double,
     ),
     r'onboardingComplete': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'onboardingComplete',
       type: IsarType.bool,
     ),
     r'smsPermissionGranted': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'smsPermissionGranted',
       type: IsarType.bool,
     ),
     r'theme': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'theme',
       type: IsarType.string,
       enumMap: _AppSettingsthemeEnumValueMap,
@@ -98,6 +103,12 @@ int _appSettingsEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.geminiApiKey;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.id.length * 3;
   bytesCount += 3 + object.incomeSources.length * 3;
   {
@@ -117,14 +128,15 @@ void _appSettingsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.budgetResetDay);
-  writer.writeLong(offsets[1], object.hashCode);
-  writer.writeString(offsets[2], object.id);
-  writer.writeStringList(offsets[3], object.incomeSources);
-  writer.writeDateTime(offsets[4], object.lastSmsSync);
-  writer.writeDouble(offsets[5], object.monthlyIncomeTarget);
-  writer.writeBool(offsets[6], object.onboardingComplete);
-  writer.writeBool(offsets[7], object.smsPermissionGranted);
-  writer.writeString(offsets[8], object.theme.name);
+  writer.writeString(offsets[1], object.geminiApiKey);
+  writer.writeLong(offsets[2], object.hashCode);
+  writer.writeString(offsets[3], object.id);
+  writer.writeStringList(offsets[4], object.incomeSources);
+  writer.writeDateTime(offsets[5], object.lastSmsSync);
+  writer.writeDouble(offsets[6], object.monthlyIncomeTarget);
+  writer.writeBool(offsets[7], object.onboardingComplete);
+  writer.writeBool(offsets[8], object.smsPermissionGranted);
+  writer.writeString(offsets[9], object.theme.name);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -135,13 +147,14 @@ AppSettings _appSettingsDeserialize(
 ) {
   final object = AppSettings(
     budgetResetDay: reader.readLong(offsets[0]),
-    id: reader.readString(offsets[2]),
-    incomeSources: reader.readStringList(offsets[3]) ?? [],
-    lastSmsSync: reader.readDateTimeOrNull(offsets[4]),
-    monthlyIncomeTarget: reader.readDouble(offsets[5]),
-    onboardingComplete: reader.readBool(offsets[6]),
-    smsPermissionGranted: reader.readBool(offsets[7]),
-    theme: _AppSettingsthemeValueEnumMap[reader.readStringOrNull(offsets[8])] ??
+    geminiApiKey: reader.readStringOrNull(offsets[1]),
+    id: reader.readString(offsets[3]),
+    incomeSources: reader.readStringList(offsets[4]) ?? [],
+    lastSmsSync: reader.readDateTimeOrNull(offsets[5]),
+    monthlyIncomeTarget: reader.readDouble(offsets[6]),
+    onboardingComplete: reader.readBool(offsets[7]),
+    smsPermissionGranted: reader.readBool(offsets[8]),
+    theme: _AppSettingsthemeValueEnumMap[reader.readStringOrNull(offsets[9])] ??
         AppThemeMode.dark,
   );
   return object;
@@ -157,20 +170,22 @@ P _appSettingsDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readStringList(offset) ?? []) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 5:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
       return (_AppSettingsthemeValueEnumMap[reader.readStringOrNull(offset)] ??
           AppThemeMode.dark) as P;
     default:
@@ -434,6 +449,160 @@ extension AppSettingsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'geminiApiKey',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'geminiApiKey',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'geminiApiKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'geminiApiKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'geminiApiKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'geminiApiKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      geminiApiKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'geminiApiKey',
+        value: '',
       ));
     });
   }
@@ -1216,6 +1385,19 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByGeminiApiKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'geminiApiKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByGeminiApiKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'geminiApiKey', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hashCode', Sort.asc);
@@ -1319,6 +1501,19 @@ extension AppSettingsQuerySortThenBy
       thenByBudgetResetDayDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'budgetResetDay', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByGeminiApiKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'geminiApiKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByGeminiApiKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'geminiApiKey', Sort.desc);
     });
   }
 
@@ -1433,6 +1628,13 @@ extension AppSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByGeminiApiKey(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'geminiApiKey', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByHashCode() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hashCode');
@@ -1498,6 +1700,12 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, int, QQueryOperations> budgetResetDayProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'budgetResetDay');
+    });
+  }
+
+  QueryBuilder<AppSettings, String?, QQueryOperations> geminiApiKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'geminiApiKey');
     });
   }
 

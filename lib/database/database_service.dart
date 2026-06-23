@@ -13,6 +13,7 @@ import '../models/advisor_card.dart';
 import '../models/app_settings.dart';
 import '../core/constants/app_constants.dart';
 import 'migrations/migration_v1.dart';
+import 'dart:convert';
 
 class DatabaseService {
   static late Isar _isar;
@@ -65,10 +66,50 @@ class DatabaseService {
   }
 
   Future<String> exportAllJson() async {
-    return '{}'; // STUB
+    final Map<String, dynamic> data = {
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'transactions': (await _isar.transactions.where().findAll()).map((e) => e.toJson()).toList(),
+      'projects': (await _isar.projects.where().findAll()).map((e) => e.toJson()).toList(),
+      'students': (await _isar.students.where().findAll()).map((e) => e.toJson()).toList(),
+      'savingsGoals': (await _isar.savingsGoals.where().findAll()).map((e) => e.toJson()).toList(),
+      'budgets': (await _isar.budgets.where().findAll()).map((e) => e.toJson()).toList(),
+      'settings': (await _isar.appSettings.where().findFirst())?.toJson() ?? {},
+    };
+    return jsonEncode(data);
   }
 
-  Future<void> importFromJson(String json) async {
-    // STUB
+  Future<void> importFromJson(String jsonStr) async {
+    try {
+      final Map<String, dynamic> data = jsonDecode(jsonStr);
+      await _isar.writeTxn(() async {
+        if (data.containsKey('transactions')) {
+          final txns = (data['transactions'] as List).map((e) => Transaction.fromJson(e)).toList();
+          await _isar.transactions.putAll(txns);
+        }
+        if (data.containsKey('projects')) {
+          final projs = (data['projects'] as List).map((e) => Project.fromJson(e)).toList();
+          await _isar.projects.putAll(projs);
+        }
+        if (data.containsKey('students')) {
+          final studs = (data['students'] as List).map((e) => Student.fromJson(e)).toList();
+          await _isar.students.putAll(studs);
+        }
+        if (data.containsKey('savingsGoals')) {
+          final goals = (data['savingsGoals'] as List).map((e) => SavingsGoal.fromJson(e)).toList();
+          await _isar.savingsGoals.putAll(goals);
+        }
+        if (data.containsKey('budgets')) {
+          final bgs = (data['budgets'] as List).map((e) => Budget.fromJson(e)).toList();
+          await _isar.budgets.putAll(bgs);
+        }
+        if (data.containsKey('settings') && (data['settings'] as Map).isNotEmpty) {
+          final set = AppSettings.fromJson(data['settings']);
+          await _isar.appSettings.put(set);
+        }
+      });
+    } catch (e) {
+      rethrow;
+    }
   }
 }

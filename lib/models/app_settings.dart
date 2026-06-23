@@ -21,6 +21,7 @@ class AppSettings {
   bool onboardingComplete;
   List<String> incomeSources;
   DateTime? lastSmsSync;
+  String? geminiApiKey;
 
   AppSettings({
     required this.id,
@@ -31,6 +32,7 @@ class AppSettings {
     required this.onboardingComplete,
     required this.incomeSources,
     this.lastSmsSync,
+    this.geminiApiKey,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class AppSettings {
       onboardingComplete: json['onboardingComplete'] as bool,
       incomeSources: List<String>.from(json['incomeSources']),
       lastSmsSync: json['lastSmsSync'] != null ? DateTime.parse(json['lastSmsSync'] as String) : null,
+      geminiApiKey: json['geminiApiKey'] as String?,
     );
   }
 
@@ -55,6 +58,7 @@ class AppSettings {
     'onboardingComplete': onboardingComplete,
     'incomeSources': incomeSources,
     'lastSmsSync': lastSmsSync?.toIso8601String(),
+    'geminiApiKey': geminiApiKey,
   };
 
   AppSettings copyWith({
@@ -66,6 +70,7 @@ class AppSettings {
     bool? onboardingComplete,
     List<String>? incomeSources,
     DateTime? lastSmsSync,
+    String? geminiApiKey,
   }) {
     return AppSettings(
       id: id ?? this.id,
@@ -76,6 +81,7 @@ class AppSettings {
       onboardingComplete: onboardingComplete ?? this.onboardingComplete,
       incomeSources: incomeSources ?? this.incomeSources,
       lastSmsSync: lastSmsSync ?? this.lastSmsSync,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     );
   }
 

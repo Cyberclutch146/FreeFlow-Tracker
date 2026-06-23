@@ -7,6 +7,9 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/constants/app_constants.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../models/app_settings.dart';
+import '../../database/database_service.dart';
+import '../../services/export/csv_export_service.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -70,25 +73,116 @@ class SettingsScreen extends ConsumerWidget {
               ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
               const SizedBox(height: 32),
 
+              Text('AI Engine', style: textStyles.headingMedium).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),
+              const SizedBox(height: 16),
+              _buildPreferenceTile(
+                context: context,
+                icon: Icons.key_rounded,
+                title: 'Gemini API Key',
+                subtitle: settings.geminiApiKey != null && settings.geminiApiKey!.isNotEmpty
+                    ? '••••••••${settings.geminiApiKey!.substring(settings.geminiApiKey!.length > 4 ? settings.geminiApiKey!.length - 4 : 0)}'
+                    : 'Not configured',
+                onTap: () {
+                  final controller = TextEditingController(text: settings.geminiApiKey ?? '');
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: colors.backgroundElevated,
+                      title: Text('Gemini API Key', style: textStyles.headingMedium),
+                      content: TextField(
+                        controller: controller,
+                        style: TextStyle(color: colors.textPrimary, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'AIza...',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(settingsRepositoryProvider).update((s) => s.copyWith(geminiApiKey: controller.text.trim()));
+                            Navigator.pop(ctx);
+                          },
+                          child: Text('Save', style: TextStyle(color: colors.accentPurple, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ).animate().fadeIn(delay: 640.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildActionTile(
+                context: context,
+                icon: Icons.auto_awesome,
+                title: 'Chat with AI Assistant',
+                color: colors.accentPurple,
+                onTap: () => context.push('/ai-chat'),
+              ).animate().fadeIn(delay: 660.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildActionTile(
+                context: context,
+                icon: Icons.summarize_rounded,
+                title: 'Generate AI Report',
+                color: colors.accentTeal,
+                onTap: () => context.push('/ai-report'),
+              ).animate().fadeIn(delay: 680.ms).slideY(begin: 0.2),
+              const SizedBox(height: 32),
+
               Text('Data', style: textStyles.headingMedium).animate().fadeIn(delay: 700.ms).slideY(begin: 0.2),
               const SizedBox(height: 16),
               _buildActionTile(
                 context: context,
                 icon: Icons.download_rounded,
-                title: 'Export Data',
+                title: 'Export Transactions (CSV)',
                 color: colors.accentTeal,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data exported! (Mock)', style: TextStyle(color: colors.textPrimary)), backgroundColor: colors.backgroundElevated));
+                onTap: () async {
+                  final txns = await ref.read(transactionRepositoryProvider).getAll();
+                  await CsvExportService.exportTransactions(txns);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Transactions exported!'), backgroundColor: colors.backgroundElevated));
                 },
               ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildActionTile(
+                context: context,
+                icon: Icons.download_rounded,
+                title: 'Backup All Data (JSON)',
+                color: colors.accentPurple,
+                onTap: () async {
+                  final dbService = ref.read(databaseServiceProvider);
+                  final jsonStr = await dbService.exportAllJson();
+                  await CsvExportService.exportJson(jsonStr);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup exported!'), backgroundColor: colors.backgroundElevated));
+                },
+              ).animate().fadeIn(delay: 850.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               _buildActionTile(
                 context: context,
                 icon: Icons.delete_forever_rounded,
                 title: 'Clear All Data',
                 color: colors.accentRed,
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Data cleared! (Mock)', style: TextStyle(color: colors.textPrimary)), backgroundColor: colors.backgroundElevated));
+                onTap: () async {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: colors.backgroundElevated,
+                      title: Text('Clear All Data?', style: textStyles.headingMedium),
+                      content: Text('This action cannot be undone.', style: textStyles.bodyMedium),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
+                        TextButton(
+                          onPressed: () async {
+                            final dbService = ref.read(databaseServiceProvider);
+                            await dbService.clearAll();
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('All data cleared.'), backgroundColor: colors.accentRed));
+                          },
+                          child: Text('Delete', style: TextStyle(color: colors.accentRed, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ).animate().fadeIn(delay: 900.ms).slideY(begin: 0.2),
               const SizedBox(height: 60),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
+import '../../models/insight_card.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -16,6 +18,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final unconfirmedAsync = ref.watch(unconfirmedTransactionsProvider);
+    final insightsAsync = ref.watch(insightsProvider);
     final colors = context.colors;
     final textStyles = context.textStyles;
 
@@ -25,6 +29,16 @@ class HomeScreen extends ConsumerWidget {
         title: Text('Dashboard', style: textStyles.headingLarge),
         backgroundColor: Colors.transparent,
         actions: [
+          IconButton(
+            icon: ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [colors.accentPurple, colors.accentTeal],
+              ).createShader(bounds),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 22),
+            ),
+            tooltip: 'AI Assistant',
+            onPressed: () => GoRouter.of(context).push('/ai-chat'),
+          ),
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: colors.textPrimary),
             onPressed: () {},
@@ -55,6 +69,123 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 _buildSummaryCard(context, balance, income, expense),
                 const SizedBox(height: 32),
+                
+                // Unconfirmed Transactions Banner
+                unconfirmedAsync.when(
+                  data: (unconfirmed) {
+                    if (unconfirmed.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: GlassPanel(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: colors.accentRed.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.warning_amber_rounded, color: colors.accentRed, size: 20),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${unconfirmed.length} Unconfirmed SMS', style: textStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+                                  Text('Tap to review new transactions', style: textStyles.bodySmall.copyWith(color: colors.textMuted)),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Show review sheet
+                              },
+                              child: Text('Review', style: TextStyle(color: colors.accentTeal, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn().slideX(begin: -0.2),
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+
+                // Insights Row
+                insightsAsync.when(
+                  data: (insights) {
+                    if (insights.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Smart Insights', style: textStyles.headingSmall),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: insights.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              final card = insights[index];
+                              Color cardColor;
+                              IconData iconData;
+                              switch (card.type) {
+                                case InsightType.info:
+                                  cardColor = colors.accentTeal;
+                                  iconData = Icons.lightbulb_outline;
+                                  break;
+                                case InsightType.success:
+                                  cardColor = Colors.greenAccent;
+                                  iconData = Icons.check_circle_outline;
+                                  break;
+                                case InsightType.warning:
+                                  cardColor = Colors.orangeAccent;
+                                  iconData = Icons.warning_amber_rounded;
+                                  break;
+                                case InsightType.danger:
+                                  cardColor = colors.accentRed;
+                                  iconData = Icons.error_outline;
+                                  break;
+                              }
+
+                              return SizedBox(
+                                width: 280,
+                                child: GlassPanel(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(iconData, color: cardColor, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(card.headline, style: textStyles.bodyLarge.copyWith(color: cardColor, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Expanded(
+                                        child: Text(card.detail, style: textStyles.bodyMedium.copyWith(color: colors.textPrimary), maxLines: 3, overflow: TextOverflow.ellipsis),
+                                      ),
+                                    ],
+                                  ),
+                                ).animate().fadeIn(delay: (200 + index * 100).ms).slideX(begin: 0.2),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

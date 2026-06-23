@@ -16,6 +16,15 @@ class BudgetRepository {
     }
   }
 
+  Future<List<Budget>> getAll() async {
+    try {
+      final isar = await DatabaseService.instance;
+      return await isar.budgets.where().findAll();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Budget?> getForCategory(String categoryStr, int month, int year) async {
     try {
       final category = Category.values.firstWhere((e) => e.name == categoryStr);
