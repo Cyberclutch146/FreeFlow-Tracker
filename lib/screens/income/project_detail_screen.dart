@@ -25,9 +25,9 @@ class ProjectDetailScreen extends ConsumerWidget {
 
     return LiquidBackground(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          
           elevation: 0,
           leading: IconButton(
             icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.textPrimary),

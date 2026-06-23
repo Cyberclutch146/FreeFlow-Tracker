@@ -24,7 +24,6 @@ class SettingsScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Settings', style: textStyles.headingLarge),
-        backgroundColor: Colors.transparent,
       ),
       body: settingsAsync.when(
         data: (settings) {

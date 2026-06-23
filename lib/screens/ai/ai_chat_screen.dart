@@ -102,7 +102,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final gemini = ref.watch(geminiServiceProvider);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      
       appBar: AppBar(
         title: Row(
           children: [
@@ -118,7 +118,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             Text('AI Assistant', style: textStyles.headingLarge),
           ],
         ),
-        backgroundColor: Colors.transparent,
+        
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: colors.textMuted),

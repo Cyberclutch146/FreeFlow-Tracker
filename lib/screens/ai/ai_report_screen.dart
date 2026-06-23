@@ -79,7 +79,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
     final textStyles = context.textStyles;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      
       appBar: AppBar(
         title: Row(
           children: [
@@ -95,7 +95,7 @@ class _AiReportScreenState extends ConsumerState<AiReportScreen> {
             Text('AI Report', style: textStyles.headingLarge),
           ],
         ),
-        backgroundColor: Colors.transparent,
+        
         actions: [
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: colors.textMuted),

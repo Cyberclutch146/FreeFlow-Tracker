@@ -20,10 +20,10 @@ class TransactionsScreen extends ConsumerWidget {
     final textStyles = context.textStyles;
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Background handled by LiquidBackground
+       // Background handled by LiquidBackground
       appBar: AppBar(
         title: Text('All Transactions', style: textStyles.headingLarge),
-        backgroundColor: Colors.transparent,
+        
         actions: [
           IconButton(
             icon: Icon(Icons.filter_list_rounded, color: colors.textPrimary),

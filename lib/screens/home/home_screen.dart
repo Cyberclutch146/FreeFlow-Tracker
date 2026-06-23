@@ -27,7 +27,6 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent, // Scaffold background handled by LiquidBackground
       appBar: AppBar(
         title: Text('Dashboard', style: textStyles.headingLarge),
-        backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             icon: ShaderMask(

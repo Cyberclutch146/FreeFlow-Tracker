@@ -46,7 +46,8 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appColors.backgroundPrimary,
+        scrolledUnderElevation: 0,
         elevation: 0,
         titleTextStyle: appTextStyles.headingLarge,
         iconTheme: IconThemeData(color: appColors.textPrimary),
