@@ -22,6 +22,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     final textStyles = context.textStyles;
 
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           Padding(

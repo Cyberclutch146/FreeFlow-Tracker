@@ -22,6 +22,7 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
     final textStyles = context.textStyles;
 
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           Padding(

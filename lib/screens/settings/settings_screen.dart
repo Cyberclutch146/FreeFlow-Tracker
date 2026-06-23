@@ -9,6 +9,8 @@ import '../../widgets/common/glass_panel.dart';
 import '../../models/app_settings.dart';
 import '../../database/database_service.dart';
 import '../../services/export/csv_export_service.dart';
+import '../../services/sms/sms_parser.dart';
+import '../../services/sms/sms_to_transaction.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -132,10 +134,48 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'SMS Parsing',
                 subtitle: settings.smsPermissionGranted ? 'Active' : 'Disabled',
                 value: settings.smsPermissionGranted,
-                onChanged: (val) {
-                  ref.read(settingsRepositoryProvider).update((s) => s.copyWith(smsPermissionGranted: val));
+                onChanged: (val) async {
+                  if (val) {
+                    final smsService = ref.read(smsServiceProvider);
+                    final granted = await smsService.requestPermission();
+                    ref.read(settingsRepositoryProvider).update((s) => s.copyWith(smsPermissionGranted: granted));
+                  } else {
+                    ref.read(settingsRepositoryProvider).update((s) => s.copyWith(smsPermissionGranted: false));
+                  }
                 },
               ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              
+              if (settings.smsPermissionGranted)
+                _buildActionTile(
+                  context: context,
+                  icon: Icons.sync_rounded,
+                  title: 'Sync SMS Inbox Now',
+                  color: colors.accentTeal,
+                  onTap: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanning inbox...')));
+                    final smsService = ref.read(smsServiceProvider);
+                    final rawLogs = await smsService.fetchInboxHistory();
+                    int count = 0;
+                    final repo = ref.read(transactionRepositoryProvider);
+                    final existingTxns = await repo.getAll();
+                    
+                    for (var log in rawLogs) {
+                      final parsed = SmsParser.parseMessage(log.sender, log.rawBody);
+                      if (parsed != null) {
+                        final newTxn = SmsToTransaction.convert(parsed, log);
+                        if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
+                          await repo.save(newTxn);
+                          count++;
+                        }
+                      }
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Synced $count new transactions!')));
+                    }
+                  },
+                ).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),
+              
               const SizedBox(height: 32),
 
               Text('AI Engine', style: textStyles.headingMedium).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),

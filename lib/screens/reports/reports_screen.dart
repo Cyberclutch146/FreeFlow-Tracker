@@ -25,6 +25,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final textStyles = context.textStyles;
 
     return SafeArea(
+      bottom: false,
       child: transactionsAsync.when(
         data: (transactions) {
           if (transactions.isEmpty) {

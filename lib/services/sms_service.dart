@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:telephony/telephony.dart';
 import 'package:uuid/uuid.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/sms_raw_log.dart';
 import '../database/database_service.dart';
 import 'sms/sms_parser.dart';
@@ -10,15 +11,15 @@ class SmsService {
   final StreamController<SmsRawLog> _incomingController = StreamController<SmsRawLog>.broadcast();
 
   Future<bool> requestPermission() async {
-    bool? permissionsGranted = await telephony.requestPhoneAndSmsPermissions;
-    return permissionsGranted ?? false;
+    final status = await Permission.sms.request();
+    return status.isGranted;
   }
 
   Future<List<SmsRawLog>> fetchInboxHistory() async {
     List<SmsRawLog> rawLogs = [];
     try {
-      bool? hasPermission = await telephony.requestPhoneAndSmsPermissions;
-      if (hasPermission != true) return rawLogs;
+      final status = await Permission.sms.request();
+      if (!status.isGranted) return rawLogs;
 
       // Get SMS messages
       List<SmsMessage> messages = await telephony.getInboxSms(
@@ -58,9 +59,15 @@ class SmsService {
     return rawLogs;
   }
 
+  bool _isListening = false;
+
   Stream<SmsRawLog> watchIncomingSms() {
+    if (_isListening) return _incomingController.stream;
+    
     telephony.listenIncomingSms(
       onNewMessage: (SmsMessage msg) {
+        print('=== SMS RECEIVED EVENT: ${msg.address} ===');
+        print('Body: ${msg.body}');
         if (msg.address == null || msg.body == null || msg.date == null) return;
         
         final parsed = SmsParser.parseMessage(msg.address!, msg.body!);
@@ -77,6 +84,7 @@ class SmsService {
       },
       listenInBackground: false,
     );
+    _isListening = true;
     return _incomingController.stream;
   }
 }

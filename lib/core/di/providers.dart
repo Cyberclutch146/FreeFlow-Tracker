@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../app.dart';
 import '../../database/database_service.dart';
 import '../../repositories/transaction_repository.dart';
 import '../../repositories/project_repository.dart';
@@ -8,6 +11,8 @@ import '../../repositories/goal_repository.dart';
 import '../../repositories/budget_repository.dart';
 import '../../repositories/settings_repository.dart';
 import '../../services/sms_service.dart';
+import '../../services/sms/sms_parser.dart';
+import '../../services/sms/sms_to_transaction.dart';
 import '../../services/insights_engine.dart';
 import '../../services/savings_advisor.dart';
 import '../../widgets/navigation/main_scaffold.dart';
@@ -54,7 +59,62 @@ final projectRepositoryProvider = Provider((ref) =>
 final studentRepositoryProvider = Provider((ref) =>
   StudentRepository(ref.read(databaseServiceProvider)));
 
+
 final smsServiceProvider = Provider((ref) => SmsService());
+
+final autoSmsSyncProvider = Provider<void>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  final isGranted = settingsAsync.valueOrNull?.smsPermissionGranted ?? false;
+
+  if (!isGranted) return;
+
+  final smsService = ref.watch(smsServiceProvider);
+  final repo = ref.watch(transactionRepositoryProvider);
+  
+  // Scrape inbox immediately on launch/provider creation
+  _runSync(smsService, repo);
+
+  // Setup periodic 2-minute polling loop
+  final timer = Timer.periodic(const Duration(minutes: 2), (_) {
+    _runSync(smsService, repo);
+  });
+  
+  ref.onDispose(() {
+    timer.cancel();
+  });
+});
+
+Future<void> _runSync(SmsService smsService, TransactionRepository repo) async {
+  try {
+    final rawLogs = await smsService.fetchInboxHistory();
+    final existingTxns = await repo.getAll();
+    int newCount = 0;
+    
+    for (var log in rawLogs) {
+      final parsed = SmsParser.parseMessage(log.sender, log.rawBody);
+      if (parsed != null) {
+        final newTxn = SmsToTransaction.convert(parsed, log);
+        if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
+          await repo.save(newTxn);
+          newCount++;
+        }
+      }
+    }
+    
+    if (newCount > 0) {
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('Auto-synced $newCount new transactions!'),
+          backgroundColor: Colors.deepPurple,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  } catch (e) {
+    debugPrint('Auto sync failed: $e');
+  }
+}
 
 final insightsEngineProvider = Provider((ref) => InsightsEngine());
 
@@ -92,9 +152,9 @@ final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return ref.watch(transactionRepositoryProvider).watchAll();
 });
 
-final unconfirmedTransactionsProvider = FutureProvider<List<Transaction>>((ref) async {
-  // We use FutureProvider here as a simple way to query them on load
-  return ref.watch(transactionRepositoryProvider).getUnconfirmed();
+final unconfirmedTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((ref) {
+  final asyncTxns = ref.watch(recentTransactionsProvider);
+  return asyncTxns.whenData((txns) => txns.where((t) => !t.isConfirmed).toList());
 });
 
 final insightsProvider = FutureProvider<List<InsightCard>>((ref) async {
