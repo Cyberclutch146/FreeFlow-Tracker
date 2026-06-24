@@ -50,7 +50,7 @@ class _SplitTransactionSheetState extends ConsumerState<SplitTransactionSheet> {
     _part1Category = widget.parentTransaction.category;
     _part1NoteController = TextEditingController(text: '${widget.parentTransaction.note ?? widget.parentTransaction.category.name} (Part 1)');
     
-    _part2Category = Category.other;
+    _part2Category = Category.uncategorized;
     _part2NoteController = TextEditingController(text: '${widget.parentTransaction.note ?? widget.parentTransaction.category.name} (Part 2)');
 
     _part1AmountController.addListener(_onAmountChanged);

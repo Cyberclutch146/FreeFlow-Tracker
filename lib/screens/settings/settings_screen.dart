@@ -326,11 +326,11 @@ class SettingsScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildThemeCard(context, ref, AppThemeMode.dark, 'Dark', Icons.nightlight_round, settings.theme == AppThemeMode.dark),
+        Expanded(child: _buildThemeCard(context, ref, AppThemeMode.dark, 'Dark', Icons.nightlight_round, settings.theme == AppThemeMode.dark)),
         const SizedBox(width: 12),
-        _buildThemeCard(context, ref, AppThemeMode.oled, 'OLED', Icons.brightness_3, settings.theme == AppThemeMode.oled),
+        Expanded(child: _buildThemeCard(context, ref, AppThemeMode.oled, 'OLED', Icons.brightness_3, settings.theme == AppThemeMode.oled)),
         const SizedBox(width: 12),
-        _buildThemeCard(context, ref, AppThemeMode.light, 'Light', Icons.wb_sunny_rounded, settings.theme == AppThemeMode.light),
+        Expanded(child: _buildThemeCard(context, ref, AppThemeMode.light, 'Light', Icons.wb_sunny_rounded, settings.theme == AppThemeMode.light)),
       ],
     );
   }
