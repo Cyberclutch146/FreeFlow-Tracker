@@ -35,7 +35,7 @@ class SmsService {
         if (msg.date == null || msg.address == null || msg.body == null) continue;
         
         final date = DateTime.fromMillisecondsSinceEpoch(msg.date!);
-        if (date.isBefore(cutoffDate)) break; // Since it's sorted DESC, we can stop
+        if (date.isBefore(cutoffDate)) continue; // Keep searching in case of sorting anomalies
 
         // We no longer strictly filter by sender address length or digits here
         // because the sms_parser is robust enough to reject non-financial SMS,

@@ -24,11 +24,10 @@ import '../di/providers.dart';
 /// - Top-level (full-screen, no bottom nav): /settings, /ai-chat, /ai-report,
 ///   /project-detail/:id, /student-detail/:id, /subscriptions
 final routerProvider = Provider<GoRouter>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
+      final settingsAsync = ref.read(settingsProvider);
       if (settingsAsync is AsyncLoading) return null;
       if (state.matchedLocation == '/splash') return null;
       
