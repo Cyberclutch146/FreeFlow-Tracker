@@ -7,6 +7,9 @@ import 'core/di/providers.dart';
 import 'services/auth_service.dart';
 import 'models/transaction.dart';
 import 'package:home_widget/home_widget.dart';
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'widgets/common/glass_panel.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -87,34 +90,68 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
             if (child != null) child,
             if (_isLocked)
               Positioned.fill(
-                child: Container(
-                  color: AppColors.fromConfig(themeConfig).backgroundPrimary,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.lock_outline, size: 64, color: AppColors.fromConfig(themeConfig).accentPurple),
-                        const SizedBox(height: 24),
-                        Material(
-                          color: Colors.transparent,
-                          child: Text(
-                            'App Locked',
-                            style: AppTextStyles.fromColors(AppColors.fromConfig(themeConfig)).headingLarge,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: Container(
+                    color: AppColors.fromConfig(themeConfig).backgroundPrimary.withValues(alpha: 0.85),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: GlassPanel(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: AppColors.fromConfig(themeConfig).accentPurple.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.lock_rounded, 
+                                  size: 64, 
+                                  color: AppColors.fromConfig(themeConfig).accentPurple,
+                                ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                                 .scaleXY(end: 1.1, duration: 2.seconds, curve: Curves.easeInOut),
+                              ),
+                              const SizedBox(height: 32),
+                              Material(
+                                color: Colors.transparent,
+                                child: Text(
+                                  'App Locked',
+                                  style: AppTextStyles.fromColors(AppColors.fromConfig(themeConfig)).headingLarge,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Material(
+                                color: Colors.transparent,
+                                child: Text(
+                                  'Authenticate to access your finances',
+                                  style: AppTextStyles.fromColors(AppColors.fromConfig(themeConfig)).bodyMedium.copyWith(
+                                    color: AppColors.fromConfig(themeConfig).textMuted,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              const SizedBox(height: 40),
+                              ElevatedButton.icon(
+                                onPressed: _authenticate,
+                                icon: const Icon(Icons.fingerprint_rounded, size: 28),
+                                label: const Text('Unlock', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.fromConfig(themeConfig).accentPurple,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  elevation: 8,
+                                  shadowColor: AppColors.fromConfig(themeConfig).accentPurple.withValues(alpha: 0.5),
+                                ),
+                              ).animate().shimmer(duration: 2.seconds, delay: 1.seconds),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        ElevatedButton.icon(
-                          onPressed: _authenticate,
-                          icon: const Icon(Icons.fingerprint),
-                          label: const Text('Unlock'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.fromConfig(themeConfig).accentPurple,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                        ),
-                      ],
+                        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, curve: Curves.easeOutCubic),
+                      ),
                     ),
                   ),
                 ),

@@ -295,7 +295,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             value: _incomeTarget,
             min: 5000,
             max: 500000,
-            divisions: 99,
+            divisions: 495,
             activeColor: colors.accentAmber,
             onChanged: (val) => setState(() => _incomeTarget = val),
           ),

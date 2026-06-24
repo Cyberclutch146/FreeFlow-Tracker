@@ -33,7 +33,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   void initState() {
     super.initState();
     _messages.add(ChatMessage(
-      text: 'Hey! 👋 I\'m your offline AI financial assistant — no API key needed, all data stays on your device!\n\nTry:\n• "How am I doing this month?"\n• "Budget status"\n• "Where\'s my money going?"\n• "Compare to last month"',
+      text: 'Hey! 👋 I\'m your local AI financial assistant. I analyze your data right here on your device!\n\nTry asking:\n• "List my recent transactions"\n• "Summarize my active budgets"\n• "What is my total spending?"\n• "Show my financial goals"',
       isUser: false,
     ));
   }
@@ -161,12 +161,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 children: [
-                  _buildQuickAction('📊 Monthly snapshot', colors),
-                  _buildQuickAction('💸 Where\'s my money going?', colors),
-                  _buildQuickAction('📋 Budget status', colors),
-                  _buildQuickAction('💡 How can I save more?', colors),
-                  _buildQuickAction('📈 Compare to last month', colors),
-                  _buildQuickAction('🎯 Goal progress', colors),
+                  _buildQuickAction('📋 List recent transactions', colors),
+                  _buildQuickAction('💰 Summarize my budgets', colors),
+                  _buildQuickAction('📉 What is my total spending?', colors),
+                  _buildQuickAction('🎯 Show my financial goals', colors),
+                  _buildQuickAction('🔍 Any large expenses recently?', colors),
+                  _buildQuickAction('📊 Give me a brief summary', colors),
                 ],
               ),
             ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.3),
