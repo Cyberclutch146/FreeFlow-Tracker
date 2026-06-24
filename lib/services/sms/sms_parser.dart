@@ -32,11 +32,15 @@ class SmsParser {
   static ParsedSms? parseMessage(String sender, String body) {
     final lowerBody = body.toLowerCase();
 
-    // Quick filter: must contain a currency marker
+    // Quick filter: must contain a currency marker or common financial terms
     if (!lowerBody.contains('rs.') &&
         !lowerBody.contains('inr') &&
         !lowerBody.contains('rs ') &&
-        !lowerBody.contains('₹')) {
+        !lowerBody.contains('₹') &&
+        !lowerBody.contains('\$') &&
+        !lowerBody.contains('usd') &&
+        !lowerBody.contains('€') &&
+        !lowerBody.contains('£')) {
       return null;
     }
 
@@ -95,9 +99,9 @@ class SmsParser {
   // ── Amount extraction ────────────────────────────────────────────────────
 
   static double? _extractAmount(String body) {
-    // Matches: Rs. 1,000.50 | Rs 1000 | INR 50,000 | ₹500
+    // Matches: Rs. 1,000.50 | Rs 1000 | INR 50,000 | ₹500 | $50 | USD 50.00 | € 50 | £ 50
     final amountRegExp = RegExp(
-      r'(?:rs\.?\s*|inr\s*|₹\s*)([\d,]+\.?\d*)',
+      r'(?:rs\.?\s*|inr\s*|₹\s*|\$\s*|usd\s*|€\s*|£\s*)([\d,]+\.?\d*)',
       caseSensitive: false,
     );
     final match = amountRegExp.firstMatch(body);

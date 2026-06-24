@@ -28,7 +28,8 @@ class SmsService {
 
       // We only care about bank messages, usually from alphanumeric senders
       final now = DateTime.now();
-      final cutoffDate = DateTime(now.year, now.month, 1); // Start of current month
+      // Look back 3 months instead of just the current month
+      final cutoffDate = DateTime(now.year, now.month - 3, 1); 
 
       for (var msg in messages) {
         if (msg.date == null || msg.address == null || msg.body == null) continue;
@@ -36,11 +37,9 @@ class SmsService {
         final date = DateTime.fromMillisecondsSinceEpoch(msg.date!);
         if (date.isBefore(cutoffDate)) break; // Since it's sorted DESC, we can stop
 
-        // Simple filter to skip obvious non-bank messages
-        if (msg.address!.length > 10 || RegExp(r'^\+?\d+$').hasMatch(msg.address!)) {
-          // It's likely a phone number, not an institutional sender like "XX-HDFCBK"
-          continue;
-        }
+        // We no longer strictly filter by sender address length or digits here
+        // because the sms_parser is robust enough to reject non-financial SMS,
+        // and some banks resolve to full names like 'Punjab national bank'.
 
         final parsed = SmsParser.parseMessage(msg.address!, msg.body!);
         if (parsed != null) {
