@@ -1,4 +1,5 @@
 import '../../core/constants/app_constants.dart';
+import 'ml_classifier.dart';
 
 /// Result of parsing a single bank SMS message.
 class ParsedSms {
@@ -41,6 +42,26 @@ class SmsParser {
         !lowerBody.contains('usd') &&
         !lowerBody.contains('€') &&
         !lowerBody.contains('£')) {
+      return null;
+    }
+
+    // 1. Machine Learning Classification (Naive Bayes)
+    double mlScore = NaiveBayesClassifier.calculateTransactionProbability(lowerBody);
+
+    // 2. Heuristic Scoring Bump (Rigid Rules)
+    // Add bonus for highly transactional phrases
+    if (lowerBody.contains('upi ref') || lowerBody.contains('avl bal') || lowerBody.contains('a/c x')) {
+      mlScore += 0.3; 
+    }
+    
+    // Major penalty for strictly promotional phrases
+    if (lowerBody.contains('credit limit') || lowerBody.contains('dear') || lowerBody.contains('http')) {
+      mlScore -= 0.5;
+    }
+
+    // 3. Final Threshold Check
+    // We require a 70% confidence score after mixing ML and heuristics
+    if (mlScore < 0.7) {
       return null;
     }
 
