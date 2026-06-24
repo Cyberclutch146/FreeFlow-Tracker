@@ -76,47 +76,50 @@ class _AddContributionSheetState extends ConsumerState<AddContributionSheet> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'How much did you save towards this goal?',
-            style: textStyles.bodyMedium.copyWith(color: colors.textMuted),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-            ],
-            style: textStyles.bodyLarge,
-            decoration: InputDecoration(
-              labelText: 'Amount (₹)',
-              labelStyle: TextStyle(color: colors.textMuted),
-              prefixText: '₹ ',
-              prefixStyle: textStyles.bodyLarge,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.borderSubtle),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: colors.accentTeal, width: 2),
-              ),
-              filled: true,
-              fillColor: colors.backgroundElevated,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'How much did you save towards this goal?',
+              style: textStyles.bodyMedium.copyWith(color: colors.textMuted),
             ),
-          ),
-          const SizedBox(height: 32),
-          AppButton(
-            label: 'Add Funds',
-            onPressed: _saveContribution,
-            backgroundColor: colors.accentTeal,
-            textColor: Colors.white,
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: _amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              style: textStyles.bodyLarge,
+              decoration: InputDecoration(
+                labelText: 'Amount (₹)',
+                labelStyle: TextStyle(color: colors.textMuted),
+                prefixText: '₹ ',
+                prefixStyle: textStyles.bodyLarge,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.borderSubtle),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.accentTeal, width: 2),
+                ),
+                filled: true,
+                fillColor: colors.backgroundElevated,
+              ),
+            ),
+            const SizedBox(height: 32),
+            AppButton(
+              label: 'Add Funds',
+              onPressed: _saveContribution,
+              backgroundColor: colors.accentTeal,
+              textColor: Colors.white,
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+          ],
+        ),
       ),
     );
   }

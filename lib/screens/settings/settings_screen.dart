@@ -12,6 +12,7 @@ import '../../services/sms/sms_parser.dart';
 import '../../services/sms/sms_to_transaction.dart';
 import '../../services/notification/notification_service.dart';
 import '../../services/notification/background_worker.dart';
+import '../../services/sms_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -222,7 +223,23 @@ class SettingsScreen extends ConsumerWidget {
                       }
                     }
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Synced $count new transactions!')));
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: colors.backgroundElevated,
+                          title: Text('Sync Complete', style: textStyles.headingMedium),
+                          content: Text(
+                            'Synced $count new transactions!\n\nDiagnostics:\n${SmsService.lastDiagnostic}',
+                            style: textStyles.bodyMedium,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: Text('OK', style: TextStyle(color: colors.accentTeal)),
+                            ),
+                          ],
+                        ),
+                      );
                     }
                   },
                 ).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),
