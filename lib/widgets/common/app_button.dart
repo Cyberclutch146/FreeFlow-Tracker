@@ -8,6 +8,8 @@ class AppButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final AppButtonVariant variant;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const AppButton({
     super.key,
@@ -15,6 +17,8 @@ class AppButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.variant = AppButtonVariant.primary,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -44,13 +48,14 @@ class AppButton extends StatelessWidget {
       );
     }
 
-    final bgColor = variant == AppButtonVariant.danger ? colors.accentRed : colors.accentPurple;
+    final bgColor = backgroundColor ?? (variant == AppButtonVariant.danger ? colors.accentRed : colors.accentPurple);
+    final fgColor = textColor ?? colors.textPrimary;
     
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
-        foregroundColor: colors.textPrimary,
+        foregroundColor: fgColor,
         disabledBackgroundColor: colors.textDisabled.withValues(alpha: 0.3),
         disabledForegroundColor: colors.textDisabled,
       ),

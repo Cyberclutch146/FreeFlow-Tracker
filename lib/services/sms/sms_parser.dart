@@ -60,8 +60,8 @@ class SmsParser {
     }
 
     // 3. Final Threshold Check
-    // We require a 70% confidence score after mixing ML and heuristics
-    if (mlScore < 0.7) {
+    // We require > 50% confidence score (it's mathematically more likely valid than spam)
+    if (mlScore < 0.5) {
       return null;
     }
 
@@ -121,14 +121,18 @@ class SmsParser {
 
   static double? _extractAmount(String body) {
     // Matches: Rs. 1,000.50 | Rs 1000 | INR 50,000 | ₹500 | $50 | USD 50.00 | € 50 | £ 50
+    // Also matches backwards for tests: 100 rs | 100 inr | 100 usd
     final amountRegExp = RegExp(
-      r'(?:rs\.?\s*|inr\s*|₹\s*|\$\s*|usd\s*|€\s*|£\s*)([\d,]+\.?\d*)',
+      r'(?:rs\.?\s*|inr\s*|₹\s*|\$\s*|usd\s*|€\s*|£\s*)([\d,]+\.?\d*)|([\d,]+\.?\d*)\s*(?:rs|inr|usd|₹|\$|€|£)',
       caseSensitive: false,
     );
     final match = amountRegExp.firstMatch(body);
-    if (match != null && match.group(1) != null) {
-      final amountStr = match.group(1)!.replaceAll(',', '');
-      return double.tryParse(amountStr);
+    if (match != null) {
+      // It could be in group 1 (prefix) or group 2 (suffix)
+      final amountStr = (match.group(1) ?? match.group(2))?.replaceAll(',', '');
+      if (amountStr != null) {
+        return double.tryParse(amountStr);
+      }
     }
     return null;
   }

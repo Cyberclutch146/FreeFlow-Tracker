@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/savings_goal.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/common/app_bottom_sheet.dart';
+import '../../widgets/common/app_button.dart';
+import '../../models/savings_goal.dart';
+import '../../core/utils/extensions.dart';
 
 class AddContributionSheet extends ConsumerStatefulWidget {
   final SavingsGoal goal;
-
   const AddContributionSheet({super.key, required this.goal});
 
-  static Future<void> show(BuildContext context, SavingsGoal goal) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AddContributionSheet(goal: goal),
+  static Future<void> show(BuildContext context, {required SavingsGoal goal}) {
+    return AppBottomSheet.show(
+      context,
+      title: 'Add Funds to ${goal.name}',
+      child: AddContributionSheet(goal: goal),
     );
   }
 
@@ -25,7 +26,13 @@ class AddContributionSheet extends ConsumerStatefulWidget {
 }
 
 class _AddContributionSheetState extends ConsumerState<AddContributionSheet> {
-  final _amountController = TextEditingController();
+  late TextEditingController _amountController;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController();
+  }
 
   @override
   void dispose() {
@@ -33,19 +40,33 @@ class _AddContributionSheetState extends ConsumerState<AddContributionSheet> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    final amount = double.tryParse(_amountController.text) ?? 0;
-    if (amount <= 0) return;
+  void _saveContribution() {
+    final amountText = _amountController.text.trim();
+    if (amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an amount')),
+      );
+      return;
+    }
 
-    final updatedGoal = widget.goal;
-    updatedGoal.currentAmount += amount;
-    
-    // Using simple savings logic: we just update the goal amount.
-    // Real tracking would also deduct from main balance via a Transaction.
-    final repo = ref.read(goalRepositoryProvider);
-    await repo.save(updatedGoal);
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
 
-    if (mounted) Navigator.pop(context);
+    // Add contribution to current amount
+    final updatedGoal = widget.goal.copyWith(
+      currentAmount: widget.goal.currentAmount + amount,
+    );
+
+    // Save back to DB
+    ref.read(goalRepositoryProvider).save(updatedGoal);
+
+    // Close the sheet
+    Navigator.of(context).pop();
   }
 
   @override
@@ -54,81 +75,48 @@ class _AddContributionSheetState extends ConsumerState<AddContributionSheet> {
     final textStyles = context.textStyles;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colors.backgroundElevated,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: colors.borderSubtle, width: 1),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 48,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.textMuted.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'How much did you save towards this goal?',
+            style: textStyles.bodyMedium.copyWith(color: colors.textMuted),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            ],
+            style: textStyles.bodyLarge,
+            decoration: InputDecoration(
+              labelText: 'Amount (₹)',
+              labelStyle: TextStyle(color: colors.textMuted),
+              prefixText: '₹ ',
+              prefixStyle: textStyles.bodyLarge,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.borderSubtle),
               ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Text(widget.goal.emoji, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Add to ${widget.goal.name}', style: textStyles.headingMedium),
-                      Text(
-                        'Remaining: ₹${(widget.goal.targetAmount - widget.goal.currentAmount).toStringAsFixed(0)}',
-                        style: textStyles.bodySmall.copyWith(color: colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            TextField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: textStyles.headingLarge.copyWith(color: colors.textPrimary),
-              autofocus: true,
-              decoration: InputDecoration(
-                prefixText: '₹ ',
-                prefixStyle: textStyles.headingLarge.copyWith(color: colors.accentTeal),
-                hintText: '',
-                filled: true,
-                fillColor: colors.backgroundPrimary,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.accentTeal, width: 2),
               ),
+              filled: true,
+              fillColor: colors.backgroundElevated,
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.accentTeal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-              child: const Text('Add Funds', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+          ),
+          const SizedBox(height: 32),
+          AppButton(
+            label: 'Add Funds',
+            onPressed: _saveContribution,
+            backgroundColor: colors.accentTeal,
+            textColor: Colors.white,
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
       ),
     );
   }

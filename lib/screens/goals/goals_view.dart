@@ -9,6 +9,7 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../core/constants/app_constants.dart';
 import 'add_goal_sheet.dart';
+import 'add_contribution_sheet.dart';
 import '../../models/advisor_card.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -169,7 +170,7 @@ class GoalsView extends ConsumerWidget {
                   IconButton(
                     icon: Icon(Icons.add_circle_outline_rounded, color: colors.accentTeal, size: 28),
                     onPressed: () {
-                      // TODO: Add Contribution flow
+                      AddContributionSheet.show(context, goal: g);
                     },
                   ),
               ],

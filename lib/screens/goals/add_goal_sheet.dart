@@ -241,6 +241,8 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
           AppButton(
             label: widget.existingGoal == null ? 'Create Goal' : 'Update Goal',
             onPressed: _submit,
+            backgroundColor: colors.accentTeal,
+            textColor: Colors.white,
           ),
           const SizedBox(height: 32),
         ],

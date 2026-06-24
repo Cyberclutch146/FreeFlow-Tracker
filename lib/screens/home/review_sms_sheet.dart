@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/constants/app_constants.dart';
 
 class ReviewSmsSheet extends ConsumerWidget {
   const ReviewSmsSheet({super.key});
@@ -115,10 +116,12 @@ class ReviewSmsSheet extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${t.amount.toStringAsFixed(0)}',
+                                '${t.direction == TransactionDirection.credit ? '+' : '-'}₹${t.amount.toStringAsFixed(0)}',
                                 style: textStyles.bodyLarge.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: colors.accentRed,
+                                  color: t.direction == TransactionDirection.credit
+                                      ? colors.accentTeal
+                                      : colors.accentRed,
                                 ),
                               ),
                               const SizedBox(height: 8),

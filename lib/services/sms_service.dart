@@ -28,8 +28,8 @@ class SmsService {
 
       // We only care about bank messages, usually from alphanumeric senders
       final now = DateTime.now();
-      // Look back 3 months instead of just the current month
-      final cutoffDate = DateTime(now.year, now.month - 3, 1); 
+      // Look back only to the start of the current month
+      final cutoffDate = DateTime(now.year, now.month, 1); 
 
       for (var msg in messages) {
         if (msg.date == null || msg.address == null || msg.body == null) continue;

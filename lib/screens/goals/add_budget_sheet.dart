@@ -118,6 +118,8 @@ class _AddBudgetSheetState extends ConsumerState<AddBudgetSheet> {
           AppButton(
             label: widget.existingBudget == null ? 'Set Budget' : 'Update Budget',
             onPressed: _submit,
+            backgroundColor: colors.accentTeal,
+            textColor: Colors.white,
           ),
           const SizedBox(height: 32),
         ],
