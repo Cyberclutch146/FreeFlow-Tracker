@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/di/providers.dart';
@@ -84,6 +85,7 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
     );
 
     await repo.save(goal);
+    HapticFeedback.mediumImpact();
     if (mounted) {
       Navigator.of(context).pop();
     }

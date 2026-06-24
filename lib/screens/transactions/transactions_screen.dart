@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -155,35 +157,62 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final colors = context.colors;
     final textStyles = context.textStyles;
 
-    return Dismissible(
+    return Slidable(
       key: ValueKey(t.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          color: colors.accentRed,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.centerRight,
-        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-      ),
-      onDismissed: (direction) {
-        ref.read(transactionRepositoryProvider).delete(t.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Transaction deleted', style: TextStyle(color: colors.textPrimary)),
-            backgroundColor: colors.backgroundElevated,
-            action: SnackBarAction(
-              label: 'Undo',
-              textColor: colors.accentPurple,
-              onPressed: () {
-                ref.read(transactionRepositoryProvider).save(t);
-              },
-            ),
+      startActionPane: ActionPane(
+        motion: const StretchMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              HapticFeedback.heavyImpact();
+              ref.read(transactionRepositoryProvider).archive(t.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Transaction archived', style: TextStyle(color: colors.textPrimary)),
+                  backgroundColor: colors.backgroundElevated,
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    textColor: colors.accentPurple,
+                    onPressed: () => ref.read(transactionRepositoryProvider).save(t),
+                  ),
+                ),
+              );
+            },
+            backgroundColor: colors.accentAmber,
+            foregroundColor: colors.backgroundPrimary,
+            icon: Icons.archive_rounded,
+            label: 'Archive',
+            borderRadius: BorderRadius.circular(16),
           ),
-        );
-      },
+        ],
+      ),
+      endActionPane: ActionPane(
+        motion: const StretchMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              HapticFeedback.heavyImpact();
+              ref.read(transactionRepositoryProvider).delete(t.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Transaction deleted', style: TextStyle(color: colors.textPrimary)),
+                  backgroundColor: colors.backgroundElevated,
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    textColor: colors.accentPurple,
+                    onPressed: () => ref.read(transactionRepositoryProvider).save(t),
+                  ),
+                ),
+              );
+            },
+            backgroundColor: colors.accentRed,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline_rounded,
+            label: 'Delete',
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ],
+      ),
       child: GestureDetector(
         onTap: () {
           // Tap to edit

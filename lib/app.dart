@@ -31,6 +31,27 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
       onStateChange: _onStateChanged,
     );
     _authenticate();
+
+    HomeWidget.widgetClicked.listen((Uri? uri) {
+      if (uri?.host == 'quick_add') {
+        _handleQuickAdd();
+      }
+    });
+    
+    HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+      if (uri?.host == 'quick_add') {
+        _handleQuickAdd();
+      }
+    });
+  }
+
+  void _handleQuickAdd() {
+    // A simple delay to ensure the app and router are fully mounted
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        ref.read(routerProvider).push('/transactions');
+      }
+    });
   }
 
   @override
@@ -70,10 +91,21 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
     final themeConfig = ref.watch(themeConfigProvider);
     ref.watch(autoSmsSyncProvider);
     
-    ref.listen<AsyncValue<List<Transaction>>>(unconfirmedTransactionsProvider, (prev, next) {
+    ref.listen<AsyncValue<List<Transaction>>>(recentTransactionsProvider, (prev, next) {
       if (next is AsyncData) {
-        final count = next.value?.length ?? 0;
-        HomeWidget.saveWidgetData<String>('unconfirmed_count', count.toString());
+        final txns = next.value ?? [];
+        double balance = 0.0;
+        for (var t in txns) {
+          if (t.direction == TransactionDirection.credit) {
+            balance += t.amount;
+          } else {
+            balance -= t.amount;
+          }
+        }
+        final settings = ref.read(settingsProvider).valueOrNull;
+        final formattedBalance = '${settings?.currencySymbol ?? '₹'} ${CurrencyFormatter.format(balance)}';
+        
+        HomeWidget.saveWidgetData<String>('current_balance', formattedBalance);
         HomeWidget.updateWidget(name: 'HomeScreenWidgetProvider');
       }
     });

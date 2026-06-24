@@ -60,60 +60,70 @@ const TransactionSchema = CollectionSchema(
       name: r'id',
       type: IsarType.string,
     ),
-    r'isConfirmed': PropertySchema(
+    r'isArchived': PropertySchema(
       id: 8,
+      name: r'isArchived',
+      type: IsarType.bool,
+    ),
+    r'isConfirmed': PropertySchema(
+      id: 9,
       name: r'isConfirmed',
       type: IsarType.bool,
     ),
     r'isRecurring': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'isRecurring',
       type: IsarType.bool,
     ),
     r'merchantName': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'merchantName',
       type: IsarType.string,
     ),
     r'note': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'note',
       type: IsarType.string,
     ),
     r'paymentMethod': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'paymentMethod',
       type: IsarType.string,
       enumMap: _TransactionpaymentMethodEnumValueMap,
     ),
     r'projectId': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'projectId',
       type: IsarType.string,
     ),
     r'receiptImagePaths': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'receiptImagePaths',
       type: IsarType.stringList,
     ),
     r'recurringFrequency': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'recurringFrequency',
       type: IsarType.string,
       enumMap: _TransactionrecurringFrequencyEnumValueMap,
     ),
     r'smsRawLogId': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'smsRawLogId',
       type: IsarType.string,
     ),
+    r'splitGroupId': PropertySchema(
+      id: 18,
+      name: r'splitGroupId',
+      type: IsarType.string,
+    ),
     r'studentId': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'studentId',
       type: IsarType.string,
     ),
     r'upiRefId': PropertySchema(
-      id: 18,
+      id: 20,
       name: r'upiRefId',
       type: IsarType.string,
     )
@@ -214,6 +224,12 @@ int _transactionEstimateSize(
     }
   }
   {
+    final value = object.splitGroupId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.studentId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -242,17 +258,19 @@ void _transactionSerialize(
   writer.writeString(offsets[5], object.direction.name);
   writer.writeLong(offsets[6], object.hashCode);
   writer.writeString(offsets[7], object.id);
-  writer.writeBool(offsets[8], object.isConfirmed);
-  writer.writeBool(offsets[9], object.isRecurring);
-  writer.writeString(offsets[10], object.merchantName);
-  writer.writeString(offsets[11], object.note);
-  writer.writeString(offsets[12], object.paymentMethod.name);
-  writer.writeString(offsets[13], object.projectId);
-  writer.writeStringList(offsets[14], object.receiptImagePaths);
-  writer.writeString(offsets[15], object.recurringFrequency?.name);
-  writer.writeString(offsets[16], object.smsRawLogId);
-  writer.writeString(offsets[17], object.studentId);
-  writer.writeString(offsets[18], object.upiRefId);
+  writer.writeBool(offsets[8], object.isArchived);
+  writer.writeBool(offsets[9], object.isConfirmed);
+  writer.writeBool(offsets[10], object.isRecurring);
+  writer.writeString(offsets[11], object.merchantName);
+  writer.writeString(offsets[12], object.note);
+  writer.writeString(offsets[13], object.paymentMethod.name);
+  writer.writeString(offsets[14], object.projectId);
+  writer.writeStringList(offsets[15], object.receiptImagePaths);
+  writer.writeString(offsets[16], object.recurringFrequency?.name);
+  writer.writeString(offsets[17], object.smsRawLogId);
+  writer.writeString(offsets[18], object.splitGroupId);
+  writer.writeString(offsets[19], object.studentId);
+  writer.writeString(offsets[20], object.upiRefId);
 }
 
 Transaction _transactionDeserialize(
@@ -275,20 +293,22 @@ Transaction _transactionDeserialize(
             reader.readStringOrNull(offsets[5])] ??
         TransactionDirection.debit,
     id: reader.readString(offsets[7]),
-    isConfirmed: reader.readBool(offsets[8]),
-    isRecurring: reader.readBool(offsets[9]),
-    merchantName: reader.readStringOrNull(offsets[10]),
-    note: reader.readStringOrNull(offsets[11]),
+    isArchived: reader.readBoolOrNull(offsets[8]) ?? false,
+    isConfirmed: reader.readBool(offsets[9]),
+    isRecurring: reader.readBool(offsets[10]),
+    merchantName: reader.readStringOrNull(offsets[11]),
+    note: reader.readStringOrNull(offsets[12]),
     paymentMethod: _TransactionpaymentMethodValueEnumMap[
-            reader.readStringOrNull(offsets[12])] ??
+            reader.readStringOrNull(offsets[13])] ??
         PaymentMethod.upi,
-    projectId: reader.readStringOrNull(offsets[13]),
-    receiptImagePaths: reader.readStringList(offsets[14]) ?? const [],
+    projectId: reader.readStringOrNull(offsets[14]),
+    receiptImagePaths: reader.readStringList(offsets[15]) ?? const [],
     recurringFrequency: _TransactionrecurringFrequencyValueEnumMap[
-        reader.readStringOrNull(offsets[15])],
-    smsRawLogId: reader.readStringOrNull(offsets[16]),
-    studentId: reader.readStringOrNull(offsets[17]),
-    upiRefId: reader.readStringOrNull(offsets[18]),
+        reader.readStringOrNull(offsets[16])],
+    smsRawLogId: reader.readStringOrNull(offsets[17]),
+    splitGroupId: reader.readStringOrNull(offsets[18]),
+    studentId: reader.readStringOrNull(offsets[19]),
+    upiRefId: reader.readStringOrNull(offsets[20]),
   );
   return object;
 }
@@ -323,29 +343,33 @@ P _transactionDeserializeProp<P>(
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 11:
       return (reader.readStringOrNull(offset)) as P;
     case 12:
+      return (reader.readStringOrNull(offset)) as P;
+    case 13:
       return (_TransactionpaymentMethodValueEnumMap[
               reader.readStringOrNull(offset)] ??
           PaymentMethod.upi) as P;
-    case 13:
-      return (reader.readStringOrNull(offset)) as P;
     case 14:
-      return (reader.readStringList(offset) ?? const []) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 15:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 16:
       return (_TransactionrecurringFrequencyValueEnumMap[
           reader.readStringOrNull(offset)]) as P;
-    case 16:
-      return (reader.readStringOrNull(offset)) as P;
     case 17:
       return (reader.readStringOrNull(offset)) as P;
     case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
+      return (reader.readStringOrNull(offset)) as P;
+    case 20:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1567,6 +1591,16 @@ extension TransactionQueryFilter
   }
 
   QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      isArchivedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isArchived',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
       isConfirmedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2768,6 +2802,160 @@ extension TransactionQueryFilter
   }
 
   QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'splitGroupId',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'splitGroupId',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'splitGroupId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'splitGroupId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'splitGroupId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'splitGroupId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      splitGroupIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'splitGroupId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
       studentIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3179,6 +3367,18 @@ extension TransactionQuerySortBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByIsArchivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByIsConfirmed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isConfirmed', Sort.asc);
@@ -3276,6 +3476,19 @@ extension TransactionQuerySortBy
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortBySmsRawLogIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'smsRawLogId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortBySplitGroupId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'splitGroupId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy>
+      sortBySplitGroupIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'splitGroupId', Sort.desc);
     });
   }
 
@@ -3402,6 +3615,18 @@ extension TransactionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByIsArchivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByIsConfirmed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isConfirmed', Sort.asc);
@@ -3514,6 +3739,19 @@ extension TransactionQuerySortThenBy
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenBySplitGroupId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'splitGroupId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy>
+      thenBySplitGroupIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'splitGroupId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByStudentId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'studentId', Sort.asc);
@@ -3594,6 +3832,12 @@ extension TransactionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isArchived');
+    });
+  }
+
   QueryBuilder<Transaction, Transaction, QDistinct> distinctByIsConfirmed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isConfirmed');
@@ -3654,6 +3898,13 @@ extension TransactionQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'smsRawLogId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctBySplitGroupId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'splitGroupId', caseSensitive: caseSensitive);
     });
   }
 
@@ -3729,6 +3980,12 @@ extension TransactionQueryProperty
     });
   }
 
+  QueryBuilder<Transaction, bool, QQueryOperations> isArchivedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isArchived');
+    });
+  }
+
   QueryBuilder<Transaction, bool, QQueryOperations> isConfirmedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isConfirmed');
@@ -3783,6 +4040,12 @@ extension TransactionQueryProperty
   QueryBuilder<Transaction, String?, QQueryOperations> smsRawLogIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'smsRawLogId');
+    });
+  }
+
+  QueryBuilder<Transaction, String?, QQueryOperations> splitGroupIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'splitGroupId');
     });
   }
 

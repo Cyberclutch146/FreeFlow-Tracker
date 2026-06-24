@@ -14,6 +14,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'split_transaction_sheet.dart';
+
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final Transaction? existingTransaction;
   const AddTransactionSheet({super.key, this.existingTransaction});
@@ -83,6 +85,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
 
     await repo.save(transaction);
+    HapticFeedback.mediumImpact();
+    
     if (mounted) {
       Navigator.of(context).pop();
     }
@@ -353,11 +357,22 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               },
             ),
           ),
-          const SizedBox(height: 32),
           AppButton(
             label: widget.existingTransaction == null ? 'Save Transaction' : 'Update Transaction',
             onPressed: _submit,
           ),
+          if (widget.existingTransaction != null) ...[
+            const SizedBox(height: 16),
+            Center(
+              child: TextButton.icon(
+                onPressed: () {
+                  SplitTransactionSheet.show(context, parentTransaction: widget.existingTransaction!);
+                },
+                icon: Icon(Icons.call_split_rounded, color: colors.accentAmber),
+                label: Text('Split this transaction', style: TextStyle(color: colors.accentAmber, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
         ],
       ),

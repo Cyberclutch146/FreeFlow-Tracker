@@ -45,6 +45,9 @@ class Transaction {
   String? merchantName;
   String? upiRefId;
   String? bankSource;
+  
+  bool isArchived;
+  String? splitGroupId;
 
   Transaction({
     required this.id,
@@ -65,6 +68,8 @@ class Transaction {
     this.merchantName,
     this.upiRefId,
     this.bankSource,
+    this.isArchived = false,
+    this.splitGroupId,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -89,6 +94,8 @@ class Transaction {
       merchantName: json['merchantName'] as String?,
       upiRefId: json['upiRefId'] as String?,
       bankSource: json['bankSource'] as String?,
+      isArchived: json['isArchived'] as bool? ?? false,
+      splitGroupId: json['splitGroupId'] as String?,
     );
   }
 
@@ -111,6 +118,8 @@ class Transaction {
     'merchantName': merchantName,
     'upiRefId': upiRefId,
     'bankSource': bankSource,
+    'isArchived': isArchived,
+    'splitGroupId': splitGroupId,
   };
 
   Transaction copyWith({
@@ -132,6 +141,8 @@ class Transaction {
     String? merchantName,
     String? upiRefId,
     String? bankSource,
+    bool? isArchived,
+    String? splitGroupId,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -152,6 +163,8 @@ class Transaction {
       merchantName: merchantName ?? this.merchantName,
       upiRefId: upiRefId ?? this.upiRefId,
       bankSource: bankSource ?? this.bankSource,
+      isArchived: isArchived ?? this.isArchived,
+      splitGroupId: splitGroupId ?? this.splitGroupId,
     );
   }
 

@@ -10,7 +10,7 @@ class TransactionRepository {
   Future<List<Transaction>> getAll() async {
     try {
       final isar = await DatabaseService.instance;
-      return await isar.transactions.where().sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -21,7 +21,7 @@ class TransactionRepository {
       final start = DateTime(year, month, 1);
       final end = DateTime(year, month + 1, 0, 23, 59, 59, 999);
       final isar = await DatabaseService.instance;
-      return await isar.transactions.filter().dateBetween(start, end).sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).and().dateBetween(start, end).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -31,7 +31,7 @@ class TransactionRepository {
     try {
       final category = Category.values.firstWhere((e) => e.name == categoryStr);
       final isar = await DatabaseService.instance;
-      return await isar.transactions.filter().categoryEqualTo(category).sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).and().categoryEqualTo(category).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -40,7 +40,7 @@ class TransactionRepository {
   Future<List<Transaction>> getByProject(String projectId) async {
     try {
       final isar = await DatabaseService.instance;
-      return await isar.transactions.filter().projectIdEqualTo(projectId).sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).and().projectIdEqualTo(projectId).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -49,7 +49,7 @@ class TransactionRepository {
   Future<List<Transaction>> getByStudent(String studentId) async {
     try {
       final isar = await DatabaseService.instance;
-      return await isar.transactions.filter().studentIdEqualTo(studentId).sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).and().studentIdEqualTo(studentId).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -58,7 +58,7 @@ class TransactionRepository {
   Future<List<Transaction>> getUnconfirmed() async {
     try {
       final isar = await DatabaseService.instance;
-      return await isar.transactions.filter().isConfirmedEqualTo(false).sortByDateDesc().findAll();
+      return await isar.transactions.filter().isArchivedEqualTo(false).and().isConfirmedEqualTo(false).sortByDateDesc().findAll();
     } catch (e) {
       rethrow;
     }
@@ -109,6 +109,35 @@ class TransactionRepository {
     }
   }
 
+  Future<void> archive(String id) async {
+    try {
+      final isar = await DatabaseService.instance;
+      final t = await getById(id);
+      if (t != null) {
+        await isar.writeTxn(() async {
+          await isar.transactions.put(t.copyWith(isArchived: true));
+        });
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> splitTransaction(String parentId, List<Transaction> children) async {
+    try {
+      final isar = await DatabaseService.instance;
+      final parent = await getById(parentId);
+      if (parent != null) {
+        await isar.writeTxn(() async {
+          await isar.transactions.delete(parent.isarId);
+          await isar.transactions.putAll(children);
+        });
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<double> getTotalByDirection(String directionStr, int month, int year) async {
     try {
       final direction = TransactionDirection.values.firstWhere((e) => e.name == directionStr);
@@ -135,7 +164,7 @@ class TransactionRepository {
   Stream<List<Transaction>> watchAll() async* {
     try {
       final isar = await DatabaseService.instance;
-      yield* isar.transactions.where().sortByDateDesc().watch(fireImmediately: true);
+      yield* isar.transactions.filter().isArchivedEqualTo(false).sortByDateDesc().watch(fireImmediately: true);
     } catch (e) {
       rethrow;
     }

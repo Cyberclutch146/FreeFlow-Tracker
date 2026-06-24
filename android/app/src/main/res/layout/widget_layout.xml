@@ -1,37 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#2E333A"
-    android:padding="16dp">
+    android:background="@drawable/widget_bg"
+    android:padding="20dp">
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Unconfirmed SMS"
+        android:text="CURRENT BALANCE"
         android:textColor="#9E9E9E"
-        android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/widget_value"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/widget_title"
-        android:layout_marginTop="8dp"
-        android:text="0"
-        android:textColor="#09B299"
-        android:textSize="32sp"
+        android:letterSpacing="0.05"
+        android:textSize="11sp"
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/widget_subtitle"
+        android:id="@+id/widget_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/widget_value"
+        android:layout_below="@id/widget_title"
         android:layout_marginTop="4dp"
-        android:text="Open app to review"
+        android:text="₹ 0.00"
         android:textColor="#FFFFFF"
-        android:textSize="12sp" />
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/widget_add_btn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/btn_bg"
+        android:padding="12dp"
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="Add Transaction"
+        android:tint="#FFFFFF" />
 
 </RelativeLayout>
