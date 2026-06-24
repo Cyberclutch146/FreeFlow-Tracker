@@ -22,6 +22,8 @@ class AppSettings {
   List<String> incomeSources;
   DateTime? lastSmsSync;
   String? geminiApiKey;
+  String currencySymbol;
+  bool pushNotificationsEnabled;
 
   AppSettings({
     required this.id,
@@ -33,6 +35,8 @@ class AppSettings {
     required this.incomeSources,
     this.lastSmsSync,
     this.geminiApiKey,
+    this.currencySymbol = '₹',
+    this.pushNotificationsEnabled = false,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,8 @@ class AppSettings {
       incomeSources: List<String>.from(json['incomeSources']),
       lastSmsSync: json['lastSmsSync'] != null ? DateTime.parse(json['lastSmsSync'] as String) : null,
       geminiApiKey: json['geminiApiKey'] as String?,
+      currencySymbol: json['currencySymbol'] as String? ?? '₹',
+      pushNotificationsEnabled: json['pushNotificationsEnabled'] as bool? ?? false,
     );
   }
 
@@ -59,6 +65,8 @@ class AppSettings {
     'incomeSources': incomeSources,
     'lastSmsSync': lastSmsSync?.toIso8601String(),
     'geminiApiKey': geminiApiKey,
+    'currencySymbol': currencySymbol,
+    'pushNotificationsEnabled': pushNotificationsEnabled,
   };
 
   AppSettings copyWith({
@@ -71,6 +79,8 @@ class AppSettings {
     List<String>? incomeSources,
     DateTime? lastSmsSync,
     String? geminiApiKey,
+    String? currencySymbol,
+    bool? pushNotificationsEnabled,
   }) {
     return AppSettings(
       id: id ?? this.id,
@@ -82,6 +92,8 @@ class AppSettings {
       incomeSources: incomeSources ?? this.incomeSources,
       lastSmsSync: lastSmsSync ?? this.lastSmsSync,
       geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+      currencySymbol: currencySymbol ?? this.currencySymbol,
+      pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
     );
   }
 

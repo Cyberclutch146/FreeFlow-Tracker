@@ -68,4 +68,23 @@ class ThemeConfig {
     textMuted: Color(0xFF868E96),
     textDisabled: Color(0xFF495057),
   );
+
+  /// True OLED black — pure #000000 background saves significant battery
+  /// on AMOLED/OLED displays where black pixels are literally off.
+  static const oledMode = ThemeConfig(
+    name: 'OLED Black',
+    backgroundBase: Color(0xFF000000),
+    surfaceColor: Color(0xFF0A0A0A),
+    elevatedSurfaceColor: Color(0xFF141414),
+    borderSubtle: Color(0xFF1A1A1A),
+    borderMid: Color(0xFF2A2A2A),
+    accentPrimary: Color(0xFF7B74FF),
+    accentSecondary: Color(0xFF00E5B8),
+    accentAmber: Color(0xFFFFBF47),
+    accentRed: Color(0xFFFF7070),
+    textPrimary: Color(0xFFFFFFFF),
+    textSecondary: Color(0xFFE0E0E0),
+    textMuted: Color(0xFF9E9E9E),
+    textDisabled: Color(0xFF424242),
+  );
 }

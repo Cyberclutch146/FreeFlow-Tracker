@@ -84,7 +84,7 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
       builder: (context, child) {
         return Stack(
           children: [
-            ?child,
+            if (child != null) child,
             if (_isLocked)
               Positioned.fill(
                 child: Container(

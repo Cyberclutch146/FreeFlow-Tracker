@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_panel.dart';
 import 'add_transaction_sheet.dart';
+import '../../widgets/transactions/transaction_filter_sheet.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -18,54 +19,23 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  TransactionDirection? _filterDirection;
+  TransactionFilterOptions _filterOptions = const TransactionFilterOptions();
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  void _showFilterSheet(BuildContext context, AppColors colors, AppTextStyles textStyles) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.backgroundSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Filter Transactions', style: textStyles.headingLarge),
-              const SizedBox(height: 16),
-              ListTile(
-                title: Text('All', style: textStyles.bodyLarge),
-                trailing: _filterDirection == null ? Icon(Icons.check, color: colors.accentPurple) : null,
-                onTap: () {
-                  setState(() => _filterDirection = null);
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                title: Text('Income Only', style: textStyles.bodyLarge),
-                trailing: _filterDirection == TransactionDirection.credit ? Icon(Icons.check, color: colors.accentPurple) : null,
-                onTap: () {
-                  setState(() => _filterDirection = TransactionDirection.credit);
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                title: Text('Expenses Only', style: textStyles.bodyLarge),
-                trailing: _filterDirection == TransactionDirection.debit ? Icon(Icons.check, color: colors.accentPurple) : null,
-                onTap: () {
-                  setState(() => _filterDirection = TransactionDirection.debit);
-                  Navigator.pop(ctx);
-                },
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-      },
-    );
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _showFilterSheet(BuildContext context, AppColors colors, AppTextStyles textStyles) async {
+    final result = await TransactionFilterSheet.show(context, _filterOptions);
+    if (result != null) {
+      setState(() {
+        _filterOptions = result;
+      });
+    }
   }
 
   @override
@@ -78,10 +48,44 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
        // Background handled by LiquidBackground
       appBar: AppBar(
         title: Text('All Transactions', style: textStyles.headingLarge),
-        
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search merchant or note...',
+                hintStyle: TextStyle(color: colors.textMuted),
+                prefixIcon: Icon(Icons.search, color: colors.textMuted),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: colors.textMuted),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: colors.backgroundElevated,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val.toLowerCase();
+                });
+              },
+            ),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.filter_list_rounded, color: _filterDirection != null ? colors.accentPurple : colors.textPrimary),
+            icon: Icon(Icons.filter_list_rounded, color: !_filterOptions.isEmpty ? colors.accentPurple : colors.textPrimary),
             onPressed: () => _showFilterSheet(context, colors, textStyles),
           ),
         ],
@@ -89,8 +93,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       body: transactionsAsync.when(
         data: (transactions) {
           final filtered = transactions.where((t) {
-            if (_filterDirection == null) return true;
-            return t.direction == _filterDirection;
+            if (_filterOptions.direction != null && t.direction != _filterOptions.direction) return false;
+            if (_filterOptions.category != null && t.category != _filterOptions.category) return false;
+            if (_filterOptions.paymentMethod != null && t.paymentMethod != _filterOptions.paymentMethod) return false;
+            if (_filterOptions.startDate != null && t.date.isBefore(_filterOptions.startDate!)) return false;
+            // Add 1 day to end date to include the whole day
+            if (_filterOptions.endDate != null && t.date.isAfter(_filterOptions.endDate!.add(const Duration(days: 1)))) return false;
+            
+            if (_searchQuery.isNotEmpty) {
+              final merchant = t.merchantName?.toLowerCase() ?? '';
+              final note = t.note?.toLowerCase() ?? '';
+              final categoryName = t.category.name.toLowerCase();
+              if (!merchant.contains(_searchQuery) && !note.contains(_searchQuery) && !categoryName.contains(_searchQuery)) {
+                return false;
+              }
+            }
+            return true;
           }).toList();
 
           if (filtered.isEmpty) {

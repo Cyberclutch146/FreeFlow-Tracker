@@ -9,21 +9,30 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
+import 'review_sms_sheet.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _showAllTime = false;
+
+  @override
+  Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
     final unconfirmedAsync = ref.watch(unconfirmedTransactionsProvider);
     final insightsAsync = ref.watch(insightsProvider);
     final colors = context.colors;
     final textStyles = context.textStyles;
+    final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Scaffold background handled by LiquidBackground
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Dashboard', style: textStyles.headingLarge),
         actions: [
@@ -39,7 +48,8 @@ class HomeScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: colors.textPrimary),
-            onPressed: () {},
+            tooltip: 'Settings',
+            onPressed: () => GoRouter.of(context).push('/settings'),
           ),
           IconButton(
             icon: Icon(Icons.settings_outlined, color: colors.textPrimary),
@@ -50,9 +60,17 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: transactionsAsync.when(
         data: (transactions) {
+          // Filter to current month for dashboard view
+          final displayTxns = _showAllTime
+              ? transactions
+              : transactions
+                  .where((t) =>
+                      t.date.year == now.year && t.date.month == now.month)
+                  .toList();
+
           double income = 0;
           double expense = 0;
-          for (var t in transactions) {
+          for (var t in displayTxns) {
             if (t.direction == TransactionDirection.credit) {
               income += t.amount;
             } else {
@@ -67,8 +85,36 @@ class HomeScreen extends ConsumerWidget {
             },
             color: colors.accentPurple,
             child: ListView(
-              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 120.0), // Padding for bottom nav
+              padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 120.0),
               children: [
+                // Month/All-time toggle
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('This Month'),
+                      selected: !_showAllTime,
+                      onSelected: (_) => setState(() => _showAllTime = false),
+                      selectedColor: colors.accentPurple.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        color: !_showAllTime ? colors.accentPurple : colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('All Time'),
+                      selected: _showAllTime,
+                      onSelected: (_) => setState(() => _showAllTime = true),
+                      selectedColor: colors.accentTeal.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        color: _showAllTime ? colors.accentTeal : colors.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 _buildSummaryCard(context, balance, income, expense),
                 const SizedBox(height: 32),
                 
@@ -102,7 +148,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             TextButton(
                               onPressed: () {
-                                // TODO: Show review sheet
+                                ReviewSmsSheet.show(context);
                               },
                               child: Text('Review', style: TextStyle(color: colors.accentTeal, fontWeight: FontWeight.bold)),
                             ),
@@ -194,7 +240,8 @@ class HomeScreen extends ConsumerWidget {
                     Text('Recent Transactions', style: textStyles.headingSmall),
                     TextButton(
                       onPressed: () {
-                        // Navigate to transactions tab
+                        // Navigate to the Transactions tab (index 1 in the shell)
+                        GoRouter.of(context).go('/transactions');
                       },
                       child: Text('See All', style: TextStyle(color: colors.accentPurple)),
                     ),

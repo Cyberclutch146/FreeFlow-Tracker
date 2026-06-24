@@ -22,48 +22,58 @@ const AppSettingsSchema = CollectionSchema(
       name: r'budgetResetDay',
       type: IsarType.long,
     ),
-    r'geminiApiKey': PropertySchema(
+    r'currencySymbol': PropertySchema(
       id: 1,
+      name: r'currencySymbol',
+      type: IsarType.string,
+    ),
+    r'geminiApiKey': PropertySchema(
+      id: 2,
       name: r'geminiApiKey',
       type: IsarType.string,
     ),
     r'hashCode': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'hashCode',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'id',
       type: IsarType.string,
     ),
     r'incomeSources': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'incomeSources',
       type: IsarType.stringList,
     ),
     r'lastSmsSync': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'lastSmsSync',
       type: IsarType.dateTime,
     ),
     r'monthlyIncomeTarget': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'monthlyIncomeTarget',
       type: IsarType.double,
     ),
     r'onboardingComplete': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'onboardingComplete',
       type: IsarType.bool,
     ),
+    r'pushNotificationsEnabled': PropertySchema(
+      id: 9,
+      name: r'pushNotificationsEnabled',
+      type: IsarType.bool,
+    ),
     r'smsPermissionGranted': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'smsPermissionGranted',
       type: IsarType.bool,
     ),
     r'theme': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'theme',
       type: IsarType.string,
       enumMap: _AppSettingsthemeEnumValueMap,
@@ -103,6 +113,7 @@ int _appSettingsEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.currencySymbol.length * 3;
   {
     final value = object.geminiApiKey;
     if (value != null) {
@@ -128,15 +139,17 @@ void _appSettingsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.budgetResetDay);
-  writer.writeString(offsets[1], object.geminiApiKey);
-  writer.writeLong(offsets[2], object.hashCode);
-  writer.writeString(offsets[3], object.id);
-  writer.writeStringList(offsets[4], object.incomeSources);
-  writer.writeDateTime(offsets[5], object.lastSmsSync);
-  writer.writeDouble(offsets[6], object.monthlyIncomeTarget);
-  writer.writeBool(offsets[7], object.onboardingComplete);
-  writer.writeBool(offsets[8], object.smsPermissionGranted);
-  writer.writeString(offsets[9], object.theme.name);
+  writer.writeString(offsets[1], object.currencySymbol);
+  writer.writeString(offsets[2], object.geminiApiKey);
+  writer.writeLong(offsets[3], object.hashCode);
+  writer.writeString(offsets[4], object.id);
+  writer.writeStringList(offsets[5], object.incomeSources);
+  writer.writeDateTime(offsets[6], object.lastSmsSync);
+  writer.writeDouble(offsets[7], object.monthlyIncomeTarget);
+  writer.writeBool(offsets[8], object.onboardingComplete);
+  writer.writeBool(offsets[9], object.pushNotificationsEnabled);
+  writer.writeBool(offsets[10], object.smsPermissionGranted);
+  writer.writeString(offsets[11], object.theme.name);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -147,15 +160,18 @@ AppSettings _appSettingsDeserialize(
 ) {
   final object = AppSettings(
     budgetResetDay: reader.readLong(offsets[0]),
-    geminiApiKey: reader.readStringOrNull(offsets[1]),
-    id: reader.readString(offsets[3]),
-    incomeSources: reader.readStringList(offsets[4]) ?? [],
-    lastSmsSync: reader.readDateTimeOrNull(offsets[5]),
-    monthlyIncomeTarget: reader.readDouble(offsets[6]),
-    onboardingComplete: reader.readBool(offsets[7]),
-    smsPermissionGranted: reader.readBool(offsets[8]),
-    theme: _AppSettingsthemeValueEnumMap[reader.readStringOrNull(offsets[9])] ??
-        AppThemeMode.dark,
+    currencySymbol: reader.readStringOrNull(offsets[1]) ?? '₹',
+    geminiApiKey: reader.readStringOrNull(offsets[2]),
+    id: reader.readString(offsets[4]),
+    incomeSources: reader.readStringList(offsets[5]) ?? [],
+    lastSmsSync: reader.readDateTimeOrNull(offsets[6]),
+    monthlyIncomeTarget: reader.readDouble(offsets[7]),
+    onboardingComplete: reader.readBool(offsets[8]),
+    pushNotificationsEnabled: reader.readBoolOrNull(offsets[9]) ?? false,
+    smsPermissionGranted: reader.readBool(offsets[10]),
+    theme:
+        _AppSettingsthemeValueEnumMap[reader.readStringOrNull(offsets[11])] ??
+            AppThemeMode.dark,
   );
   return object;
 }
@@ -170,22 +186,26 @@ P _appSettingsDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset) ?? '₹') as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readStringList(offset) ?? []) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 6:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 8:
       return (reader.readBool(offset)) as P;
     case 9:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
       return (_AppSettingsthemeValueEnumMap[reader.readStringOrNull(offset)] ??
           AppThemeMode.dark) as P;
     default:
@@ -449,6 +469,142 @@ extension AppSettingsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'currencySymbol',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'currencySymbol',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'currencySymbol',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currencySymbol',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      currencySymbolIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'currencySymbol',
+        value: '',
       ));
     });
   }
@@ -1222,6 +1378,16 @@ extension AppSettingsQueryFilter
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      pushNotificationsEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pushNotificationsEnabled',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
       smsPermissionGrantedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1385,6 +1551,19 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByCurrencySymbol() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currencySymbol', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByCurrencySymbolDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currencySymbol', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByGeminiApiKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'geminiApiKey', Sort.asc);
@@ -1463,6 +1642,20 @@ extension AppSettingsQuerySortBy
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByPushNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pushNotificationsEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByPushNotificationsEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pushNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       sortBySmsPermissionGranted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'smsPermissionGranted', Sort.asc);
@@ -1501,6 +1694,19 @@ extension AppSettingsQuerySortThenBy
       thenByBudgetResetDayDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'budgetResetDay', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByCurrencySymbol() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currencySymbol', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByCurrencySymbolDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currencySymbol', Sort.desc);
     });
   }
 
@@ -1594,6 +1800,20 @@ extension AppSettingsQuerySortThenBy
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByPushNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pushNotificationsEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByPushNotificationsEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pushNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       thenBySmsPermissionGranted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'smsPermissionGranted', Sort.asc);
@@ -1625,6 +1845,14 @@ extension AppSettingsQueryWhereDistinct
   QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByBudgetResetDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'budgetResetDay');
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByCurrencySymbol(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'currencySymbol',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -1675,6 +1903,13 @@ extension AppSettingsQueryWhereDistinct
   }
 
   QueryBuilder<AppSettings, AppSettings, QDistinct>
+      distinctByPushNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pushNotificationsEnabled');
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QDistinct>
       distinctBySmsPermissionGranted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'smsPermissionGranted');
@@ -1700,6 +1935,12 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, int, QQueryOperations> budgetResetDayProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'budgetResetDay');
+    });
+  }
+
+  QueryBuilder<AppSettings, String, QQueryOperations> currencySymbolProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'currencySymbol');
     });
   }
 
@@ -1745,6 +1986,13 @@ extension AppSettingsQueryProperty
       onboardingCompleteProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'onboardingComplete');
+    });
+  }
+
+  QueryBuilder<AppSettings, bool, QQueryOperations>
+      pushNotificationsEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pushNotificationsEnabled');
     });
   }
 

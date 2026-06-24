@@ -7,17 +7,30 @@ import '../../core/constants/app_constants.dart';
 import 'category_classifier.dart';
 
 /// Offline conversational AI engine. No API key, no internet, instant responses.
-/// Replaces GeminiService with the same public API surface.
+///
+/// Features:
+/// - Persistent conversation history within a session (call [resetChat] to clear)
+/// - Follow-up detection: remembers what was asked last and routes accordingly
+/// - Progressive verbosity: early turns give compact answers, later turns expand
+/// - Error-safe: chat() never throws; falls back to a friendly message
 class OfflineAIService {
   final _random = Random();
 
-  // Conversation memory
+  // ── Conversation state ────────────────────────────────────────────────────
   final List<_ChatTurn> _history = [];
-  String? _lastIntent;
-  int _turnCount = 0;
+  String? _lastIntent;    // Intent of the previous turn (for follow-up routing)
+  int _turnCount = 0;     // Total turns in the current session
 
   // Always "configured" — no API key needed
   bool get isConfigured => true;
+
+  /// Returns a read-only summary of the conversation so far (last N turns).
+  List<String> get conversationSummary {
+    final recent = _history.length > 6
+        ? _history.sublist(_history.length - 6)
+        : _history;
+    return recent.map((t) => '[${t.role}]: ${t.text}').toList();
+  }
 
   void resetChat() {
     _history.clear();
@@ -25,49 +38,93 @@ class OfflineAIService {
     _turnCount = 0;
   }
 
-  // ──────────────────────────────────────────────
-  // 1. Conversational Chat
-  // ──────────────────────────────────────────────
+  // ── 1. Conversational Chat ────────────────────────────────────────────────
 
   Future<String> chat(
     String userMessage, {
     required List<Transaction> recentTransactions,
     required List<SavingsGoal> goals,
     required List<Budget> budgets,
-    required AppSettings settings,
+    required AppSettings? settings,
   }) async {
-    // Simulate a tiny "thinking" delay so it feels natural
-    await Future.delayed(Duration(milliseconds: 350 + _random.nextInt(400)));
+    try {
+      await Future.delayed(Duration(milliseconds: 350 + _random.nextInt(400)));
 
-    final now = DateTime.now();
-    final thisMonth = recentTransactions
-        .where((t) => t.date.year == now.year && t.date.month == now.month)
-        .toList();
-    final lastMonth = recentTransactions.where((t) {
-      final prev = DateTime(now.year, now.month - 1);
-      return t.date.year == prev.year && t.date.month == prev.month;
-    }).toList();
+      final now = DateTime.now();
 
-    final ctx = _FinancialContext.build(
-      thisMonth: thisMonth,
-      lastMonth: lastMonth,
-      allTransactions: recentTransactions,
-      goals: goals,
-      budgets: budgets,
-      settings: settings,
-      now: now,
-    );
+      // Fix: explicit previous-month calculation handles January correctly
+      final prevMonthDate = now.month == 1
+          ? DateTime(now.year - 1, 12)
+          : DateTime(now.year, now.month - 1);
 
-    _history.add(_ChatTurn(role: 'user', text: userMessage));
-    _turnCount++;
+      final thisMonth = recentTransactions
+          .where((t) => t.date.year == now.year && t.date.month == now.month)
+          .toList();
+      final lastMonth = recentTransactions
+          .where((t) =>
+              t.date.year == prevMonthDate.year &&
+              t.date.month == prevMonthDate.month)
+          .toList();
 
-    final intent = _classifyIntent(userMessage.toLowerCase());
-    final response = _dispatch(intent, userMessage, ctx);
+      final ctx = _FinancialContext.build(
+        thisMonth: thisMonth,
+        lastMonth: lastMonth,
+        allTransactions: recentTransactions,
+        goals: goals,
+        budgets: budgets,
+        settings: settings,
+        now: now,
+      );
 
-    _history.add(_ChatTurn(role: 'ai', text: response));
-    _lastIntent = intent;
+      _history.add(_ChatTurn(role: 'user', text: userMessage));
+      _turnCount++;
 
-    return response;
+      final lower = userMessage.toLowerCase();
+      final intent = _classifyIntent(lower);
+
+      // Follow-up detection: check if user is asking for more detail on last topic
+      final isFollowUp = _isFollowUp(lower, _lastIntent);
+      final response = isFollowUp
+          ? _handleFollowUp(_lastIntent!, ctx)
+          : _dispatch(intent, userMessage, ctx);
+
+      _history.add(_ChatTurn(role: 'ai', text: response));
+      _lastIntent = isFollowUp ? _lastIntent : intent;
+
+      return response;
+    } catch (e) {
+      // Graceful fallback — never crash the chat screen
+      return '⚠️ Something went wrong on my end! Try rephrasing or ask me a different question. (Error: ${e.runtimeType})';
+    }
+  }
+
+  /// Returns true if the user's message is a follow-up on the [previousIntent].
+  bool _isFollowUp(String lower, String? previousIntent) {
+    if (previousIntent == null || previousIntent == 'greeting') return false;
+    const followUpSignals = [
+      'and', 'what about', 'also', 'tell me more', 'more detail',
+      'explain', 'elaborate', 'break it down', 'break down', 'specifically',
+      'last month', 'and last', 'show more', 'go on',
+    ];
+    return followUpSignals.any((s) => lower.startsWith(s) || lower.contains(s));
+  }
+
+  /// Provides a deeper, more detailed response for a follow-up turn.
+  String _handleFollowUp(String previousIntent, _FinancialContext ctx) {
+    switch (previousIntent) {
+      case 'monthly_summary':
+        return _handleCategoryBreakdown(ctx);
+      case 'top_expenses':
+        return _handleSpendingTrend(ctx);
+      case 'budget_check':
+        return _handleSavingsAdvice(ctx);
+      case 'income_status':
+        return _handleGoalProgress(ctx);
+      case 'spending_trend':
+        return _handlePrediction(ctx);
+      default:
+        return _handleMonthlySummary(ctx);
+    }
   }
 
   // ──────────────────────────────────────────────
@@ -102,7 +159,8 @@ class OfflineAIService {
   // ──────────────────────────────────────────────
 
   Future<Map<String, String>> batchCategorize(List<String> merchantNames) async {
-    return CategoryClassifier.batchClassify(merchantNames);
+    // batchClassifyNamed returns Map<String, String> (category.name strings), matching return type
+    return CategoryClassifier.batchClassifyNamed(merchantNames);
   }
 
   // ──────────────────────────────────────────────
@@ -112,20 +170,35 @@ class OfflineAIService {
   Future<String> getQuickInsight({
     required List<Transaction> transactions,
     required String question,
+    List<SavingsGoal> goals = const [],
+    List<Budget> budgets = const [],
+    AppSettings? settings,
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final intent = _classifyIntent(question.toLowerCase());
     final now = DateTime.now();
+
+    // Fix: explicit previous-month calc handles January correctly
+    final prevMonthDate = now.month == 1
+        ? DateTime(now.year - 1, 12)
+        : DateTime(now.year, now.month - 1);
+
     final thisMonth = transactions
         .where((t) => t.date.year == now.year && t.date.month == now.month)
         .toList();
+    final lastMonth = transactions
+        .where((t) =>
+            t.date.year == prevMonthDate.year &&
+            t.date.month == prevMonthDate.month)
+        .toList();
+
     final ctx = _FinancialContext.build(
       thisMonth: thisMonth,
-      lastMonth: [],
+      lastMonth: lastMonth,
       allTransactions: transactions,
-      goals: [],
-      budgets: [],
-      settings: null,
+      goals: goals,
+      budgets: budgets,
+      settings: settings,
       now: now,
     );
     return _dispatch(intent, question, ctx);
@@ -342,8 +415,9 @@ $summary''';
     ];
 
     if (tips.isEmpty) {
-      tips.add(_pick(genericTips));
-      tips.add(_pick(genericTips.where((t) => !tips.contains(t)).toList()));
+      // Fix: shuffle then take 2 to guarantee no duplicates
+      final shuffled = List<String>.from(genericTips)..shuffle(_random);
+      tips.addAll(shuffled.take(2));
     }
 
     final header = _pick([

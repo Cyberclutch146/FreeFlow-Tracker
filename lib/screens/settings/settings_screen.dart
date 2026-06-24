@@ -10,6 +10,8 @@ import '../../models/app_settings.dart';
 import '../../services/export/csv_export_service.dart';
 import '../../services/sms/sms_parser.dart';
 import '../../services/sms/sms_to_transaction.dart';
+import '../../services/notification/notification_service.dart';
+import '../../services/notification/background_worker.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -115,6 +117,39 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 },
               ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildPreferenceTile(
+                context: context,
+                icon: Icons.currency_exchange_rounded,
+                title: 'Primary Currency',
+                subtitle: settings.currencySymbol,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) {
+                      final currencies = ['₹', '\$', '€', '£', '¥'];
+                      return AlertDialog(
+                        backgroundColor: colors.backgroundElevated,
+                        title: Text('Select Currency', style: textStyles.headingMedium),
+                        content: Wrap(
+                          spacing: 12,
+                          children: currencies.map((c) => ChoiceChip(
+                            label: Text(c, style: const TextStyle(fontSize: 18)),
+                            selected: settings.currencySymbol == c,
+                            onSelected: (val) {
+                              if (val) {
+                                ref.read(settingsRepositoryProvider).update((s) => s.copyWith(currencySymbol: c));
+                                Navigator.pop(ctx);
+                              }
+                            },
+                            selectedColor: colors.accentPurple.withValues(alpha: 0.3),
+                          )).toList(),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.2),
               const SizedBox(height: 32),
 
               Text('Integrations & Managers', style: textStyles.headingMedium).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
@@ -143,6 +178,23 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
               ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildToggleTile(
+                context: context,
+                icon: Icons.notifications_active_rounded,
+                title: 'Push Notifications',
+                subtitle: settings.pushNotificationsEnabled ? 'Weekly digests enabled' : 'Disabled',
+                value: settings.pushNotificationsEnabled,
+                onChanged: (val) async {
+                  if (val) {
+                    await NotificationService.requestPermissions();
+                    BackgroundWorker.scheduleWeeklyDigest();
+                  } else {
+                    BackgroundWorker.cancelAll();
+                  }
+                  ref.read(settingsRepositoryProvider).update((s) => s.copyWith(pushNotificationsEnabled: val));
+                },
+              ).animate().fadeIn(delay: 610.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               
               if (settings.smsPermissionGranted)

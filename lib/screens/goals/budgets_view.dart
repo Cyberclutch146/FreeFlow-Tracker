@@ -9,6 +9,7 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../core/constants/app_constants.dart';
 import 'add_budget_sheet.dart';
+import 'budget_history_sheet.dart';
 import '../../core/utils/extensions.dart';
 import '../../models/transaction.dart';
 import '../../widgets/budgets/budget_progress_bar.dart';
@@ -112,7 +113,7 @@ class BudgetsView extends ConsumerWidget {
       },
       child: GestureDetector(
         onTap: () {
-          AddBudgetSheet.show(context, existingBudget: b);
+          BudgetHistorySheet.show(context, b);
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -122,11 +123,12 @@ class BudgetsView extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      b.category.name.capitalize(),
-                      style: textStyles.headingLarge,
+                    Expanded(
+                      child: Text(
+                        b.category.name.capitalize(),
+                        style: textStyles.headingLarge,
+                      ),
                     ),
                     Text(
                       '${CurrencyFormatter.format(spent)} / ${CurrencyFormatter.format(b.monthlyLimit)}',
@@ -135,6 +137,11 @@ class BudgetsView extends ConsumerWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => AddBudgetSheet.show(context, existingBudget: b),
+                      child: Icon(Icons.edit_outlined, color: colors.textMuted, size: 20),
                     ),
                   ],
                 ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../app.dart';
 import '../../database/database_service.dart';
 import '../../repositories/transaction_repository.dart';
@@ -15,14 +14,6 @@ import '../../services/sms/sms_parser.dart';
 import '../../services/sms/sms_to_transaction.dart';
 import '../../services/insights_engine.dart';
 import '../../services/savings_advisor.dart';
-import '../../widgets/navigation/main_scaffold.dart';
-import '../../screens/home/home_screen.dart';
-import '../../screens/transactions/transactions_screen.dart';
-import '../../screens/income/income_screen.dart';
-import '../../screens/goals/goals_screen.dart';
-import '../../screens/reports/reports_screen.dart';
-import '../../screens/settings/settings_screen.dart';
-import '../../screens/settings/subscriptions_screen.dart';
 import '../../models/transaction.dart';
 import '../../models/app_settings.dart';
 import '../../models/project.dart';
@@ -31,13 +22,13 @@ import '../../models/savings_goal.dart';
 import '../../models/budget.dart';
 import '../../core/constants/app_constants.dart';
 import '../theme/theme_config.dart';
+import '../router/app_router.dart';
 import '../../services/ai/offline_ai_service.dart';
-import '../../screens/ai/ai_chat_screen.dart';
-import '../../screens/ai/ai_report_screen.dart';
-import '../../screens/income/project_detail_screen.dart';
-import '../../screens/income/student_detail_screen.dart';
 import '../../models/insight_card.dart';
 import '../../models/advisor_card.dart';
+
+// Re-export routerProvider from its dedicated module
+export '../router/app_router.dart' show routerProvider;
 
 final databaseServiceProvider = Provider((ref) => DatabaseService());
 
@@ -86,25 +77,30 @@ final autoSmsSyncProvider = Provider<void>((ref) {
 
 Future<void> _runSync(SmsService smsService, TransactionRepository repo) async {
   try {
+    // Note: fetchInboxHistory now only returns raw SMS logs (not pre-parsed).
+    // We parse each log exactly once here to avoid double-parsing.
     final rawLogs = await smsService.fetchInboxHistory();
     final existingTxns = await repo.getAll();
     int newCount = 0;
-    
-    for (var log in rawLogs) {
+
+    for (final log in rawLogs) {
+      // Single parse point — SmsParser is the only place parsing happens
       final parsed = SmsParser.parseMessage(log.sender, log.rawBody);
-      if (parsed != null) {
-        final newTxn = SmsToTransaction.convert(parsed, log);
-        if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
-          await repo.save(newTxn);
-          newCount++;
-        }
+      if (parsed == null) continue;
+
+      final newTxn = SmsToTransaction.convert(parsed, log);
+      if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
+        await repo.save(newTxn);
+        // Add to local list to prevent duplicates within the same sync batch
+        existingTxns.add(newTxn);
+        newCount++;
       }
     }
-    
+
     if (newCount > 0) {
       scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
-          content: Text('Auto-synced $newCount new transactions!'),
+          content: Text('✅ Auto-synced $newCount new transaction${newCount > 1 ? 's' : ''}!'),
           backgroundColor: Colors.deepPurple,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
@@ -112,7 +108,7 @@ Future<void> _runSync(SmsService smsService, TransactionRepository repo) async {
       );
     }
   } catch (e) {
-    debugPrint('Auto sync failed: $e');
+    debugPrint('SMS auto-sync failed: $e');
   }
 }
 
@@ -120,8 +116,12 @@ final insightsEngineProvider = Provider((ref) => InsightsEngine());
 
 final savingsAdvisorProvider = Provider((ref) => SavingsAdvisor());
 
-/// Offline AI — always ready, no API key needed.
-final geminiServiceProvider = Provider((ref) => OfflineAIService());
+/// Offline AI — singleton so conversation history persists across screens.
+/// keepAlive: true prevents Riverpod from disposing it when no widget is listening.
+final geminiServiceProvider = Provider<OfflineAIService>((ref) {
+  ref.keepAlive();
+  return OfflineAIService();
+});
 
 final settingsProvider = StreamProvider<AppSettings>((ref) {
   return ref.watch(settingsRepositoryProvider).watch();
@@ -130,11 +130,13 @@ final settingsProvider = StreamProvider<AppSettings>((ref) {
 final themeConfigProvider = Provider<ThemeConfig>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   final themeMode = settingsAsync.valueOrNull?.theme ?? AppThemeMode.dark;
-  
+
   switch (themeMode) {
     case AppThemeMode.dark:
-    case AppThemeMode.oled:
       return ThemeConfig.darkMode;
+    case AppThemeMode.oled:
+      // True black — saves battery on OLED screens
+      return ThemeConfig.oledMode;
     case AppThemeMode.light:
       return ThemeConfig.lightMode;
   }
@@ -207,28 +209,4 @@ final budgetsProvider = StreamProvider<List<Budget>>((ref) {
   return ref.watch(budgetRepositoryProvider).watchAll();
 });
 
-final routerProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
-    initialLocation: '/home',
-    routes: [
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return MainScaffold(navigationShell: navigationShell);
-        },
-        branches: [
-          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (context, state) => const HomeScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/transactions', builder: (context, state) => const TransactionsScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/income', builder: (context, state) => const IncomeScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen())]),
-        ],
-      ),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/ai-chat', builder: (context, state) => const AiChatScreen()),
-      GoRoute(path: '/ai-report', builder: (context, state) => const AiReportScreen()),
-      GoRoute(path: '/project-detail/:id', builder: (context, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!)),
-      GoRoute(path: '/student-detail/:id', builder: (context, state) => StudentDetailScreen(studentId: state.pathParameters['id']!)),
-      GoRoute(path: '/subscriptions', builder: (context, state) => const SubscriptionsScreen()),
-    ],
-  );
-});
+// routerProvider is defined in core/router/app_router.dart and re-exported above.

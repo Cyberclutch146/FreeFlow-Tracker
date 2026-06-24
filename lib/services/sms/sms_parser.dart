@@ -1,5 +1,6 @@
 import '../../core/constants/app_constants.dart';
 
+/// Result of parsing a single bank SMS message.
 class ParsedSms {
   final double amount;
   final TransactionDirection direction;
@@ -7,6 +8,8 @@ class ParsedSms {
   final String? upiRefId;
   final String bankSource;
   final Confidence confidence;
+  /// True when the SMS indicates this was a card (credit/debit card) payment.
+  final bool isCardTransaction;
 
   ParsedSms({
     required this.amount,
@@ -15,48 +18,43 @@ class ParsedSms {
     this.upiRefId,
     required this.bankSource,
     required this.confidence,
+    this.isCardTransaction = false,
   });
 }
 
+/// Parses Indian bank SMS messages into structured [ParsedSms] objects.
+///
+/// Supports UPI, card, NEFT, and general debit/credit SMS formats.
+/// Tuned for Indian banking vocabulary including Hindi/regional mixed patterns.
 class SmsParser {
+  /// Attempt to parse [body] from [sender] into a [ParsedSms].
+  /// Returns null if the message doesn't look like a financial transaction.
   static ParsedSms? parseMessage(String sender, String body) {
-    body = body.toLowerCase();
-    
-    // Quick filter: Must look like a financial SMS
-    if (!body.contains('rs.') && !body.contains('inr') && !body.contains('rs ')) {
+    final lowerBody = body.toLowerCase();
+
+    // Quick filter: must contain a currency marker
+    if (!lowerBody.contains('rs.') &&
+        !lowerBody.contains('inr') &&
+        !lowerBody.contains('rs ') &&
+        !lowerBody.contains('₹')) {
       return null;
     }
-    
-    // Extract Bank Name from sender
-    String bankSource = _extractBankName(sender);
 
-    // Extract Direction
-    TransactionDirection? direction;
-    if (body.contains('debited') || body.contains('paid') || body.contains('sent')) {
-      direction = TransactionDirection.debit;
-    } else if (body.contains('credited') || body.contains('received')) {
-      direction = TransactionDirection.credit;
-    }
-    
+    final bankSource = _extractBankName(sender);
+    final direction = _extractDirection(lowerBody);
     if (direction == null) return null;
 
-    // Extract Amount
-    double? amount = _extractAmount(body);
-    if (amount == null) return null;
+    final amount = _extractAmount(lowerBody);
+    if (amount == null || amount <= 0) return null;
 
-    // Extract Merchant
-    String? merchant = _extractMerchant(body, direction);
+    final isCard = _isCardTransaction(lowerBody);
+    final merchant = _extractMerchant(lowerBody, direction);
+    final upiRef = _extractUpiRef(lowerBody);
 
-    // Extract UPI Ref
-    String? upiRef = _extractUpiRef(body);
-
-    // Calculate Confidence
-    Confidence confidence = Confidence.low;
-    if (merchant != null && merchant.isNotEmpty && amount > 0) {
-      confidence = Confidence.high;
-    } else if (amount > 0) {
-      confidence = Confidence.medium;
-    }
+    // Confidence: high if we have both merchant and amount, medium if only amount
+    final confidence = (merchant != null && merchant.isNotEmpty)
+        ? Confidence.high
+        : Confidence.medium;
 
     return ParsedSms(
       amount: amount,
@@ -65,73 +63,176 @@ class SmsParser {
       upiRefId: upiRef,
       bankSource: bankSource,
       confidence: confidence,
+      isCardTransaction: isCard,
     );
   }
 
-  static String _extractBankName(String sender) {
-    sender = sender.toUpperCase();
-    if (sender.contains('SBI')) return 'SBI';
-    if (sender.contains('HDFC')) return 'HDFC Bank';
-    if (sender.contains('ICICI')) return 'ICICI Bank';
-    if (sender.contains('AXIS')) return 'Axis Bank';
-    if (sender.contains('KOTAK')) return 'Kotak Bank';
-    if (sender.contains('PAYTM')) return 'Paytm';
-    if (sender.contains('PNB') || sender.contains('PUNJAB')) return 'PNB';
-    return 'Unknown Bank';
+  // ── Direction detection ───────────────────────────────────────────────────
+
+  static TransactionDirection? _extractDirection(String body) {
+    // Debit signals
+    const debitSignals = [
+      'debited', 'deducted', 'paid', 'sent', 'withdrawn', 'withdrawal',
+      'purchase', 'used at', 'charged', 'spent', 'payment of', 'transferred to',
+      'trf to', 'transfer to', 'debit', 'payment done', 'imps/neft sent',
+    ];
+    // Credit signals
+    const creditSignals = [
+      'credited', 'received', 'deposited', 'added', 'refund', 'cashback',
+      'transfer in', 'trf from', 'transfer from', 'imps received',
+      'neft received', 'credit', 'money received',
+    ];
+
+    for (final s in debitSignals) {
+      if (body.contains(s)) return TransactionDirection.debit;
+    }
+    for (final s in creditSignals) {
+      if (body.contains(s)) return TransactionDirection.credit;
+    }
+    return null;
   }
 
+  // ── Amount extraction ────────────────────────────────────────────────────
+
   static double? _extractAmount(String body) {
-    // Matches Rs. 100, Rs 100, INR 100, Rs.100.50, and handles commas like 1,00,000.50
-    final RegExp amountRegExp = RegExp(r'(?:rs\.?|inr)\s*([\d,]+\.?\d*)', caseSensitive: false);
+    // Matches: Rs. 1,000.50 | Rs 1000 | INR 50,000 | ₹500
+    final amountRegExp = RegExp(
+      r'(?:rs\.?\s*|inr\s*|₹\s*)([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
     final match = amountRegExp.firstMatch(body);
     if (match != null && match.group(1) != null) {
-      String amountStr = match.group(1)!.replaceAll(',', '');
+      final amountStr = match.group(1)!.replaceAll(',', '');
       return double.tryParse(amountStr);
     }
     return null;
   }
 
+  // ── Merchant extraction ──────────────────────────────────────────────────
+
   static String? _extractMerchant(String body, TransactionDirection direction) {
     String? merchant;
+
     if (direction == TransactionDirection.debit) {
-      // Look for "to " or "at " or "for " or UPI VPA
-      final upiMatch = RegExp(r'(?:\s+to\s+|\s+vpa\s+|\s+upi\s+)([a-zA-Z0-9\.\-@]+)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-      if (upiMatch != null && upiMatch.group(1)!.contains('@')) {
-         merchant = upiMatch.group(1)?.trim();
-      } else {
-        final toMatch = RegExp(r'to\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-        if (toMatch != null) merchant = toMatch.group(1)?.trim();
-        
-        if (merchant == null) {
-          final atMatch = RegExp(r'at\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-          if (atMatch != null) merchant = atMatch.group(1)?.trim();
-        }
+      // Try UPI VPA first (most specific)
+      final vpaMatch = RegExp(
+        r'(?:to\s+vpa\s+|vpa\s+|to\s+)([a-zA-Z0-9.\-@]+@[a-zA-Z0-9.\-]+)',
+      ).firstMatch(body);
+      if (vpaMatch != null) return vpaMatch.group(1)?.toLowerCase().trim();
+
+      // "to <merchant>" pattern — allow hyphens, ampersands, slashes, dots
+      final toMatch = RegExp(
+        r'\bto\b\s+([a-zA-Z0-9\s\-&/\.]+?)(?:\s+on\b|\s+ref\b|\s+upi\b|\s+a/c|\.|$)',
+      ).firstMatch(body);
+      if (toMatch != null) merchant = toMatch.group(1)?.trim();
+
+      // "at <merchant>" pattern
+      if (merchant == null) {
+        final atMatch = RegExp(
+          r'\bat\b\s+([a-zA-Z0-9\s\-&/\.]+?)(?:\s+on\b|\s+ref\b|\s+upi\b|\.|$)',
+        ).firstMatch(body);
+        if (atMatch != null) merchant = atMatch.group(1)?.trim();
+      }
+
+      // "for <merchant>" pattern
+      if (merchant == null) {
+        final forMatch = RegExp(
+          r'\bfor\b\s+([a-zA-Z0-9\s\-&/\.]+?)(?:\s+on\b|\s+ref\b|\.|$)',
+        ).firstMatch(body);
+        if (forMatch != null) merchant = forMatch.group(1)?.trim();
       }
     } else {
-      // Look for "from " or "by " or UPI VPA
-      final upiMatch = RegExp(r'(?:\s+from\s+|\s+by\s+|\s+vpa\s+)([a-zA-Z0-9\.\-@]+)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-      if (upiMatch != null && upiMatch.group(1)!.contains('@')) {
-         merchant = upiMatch.group(1)?.trim();
-      } else {
-        final fromMatch = RegExp(r'from\s+([a-zA-Z0-9\s]+?)(?:\s+on|\.|\s+ref|\s+upi|$)').firstMatch(body);
-        if (fromMatch != null) merchant = fromMatch.group(1)?.trim();
-      }
+      // Credit: try UPI VPA
+      final vpaMatch = RegExp(
+        r'(?:from\s+vpa\s+|vpa\s+|from\s+)([a-zA-Z0-9.\-@]+@[a-zA-Z0-9.\-]+)',
+      ).firstMatch(body);
+      if (vpaMatch != null) return vpaMatch.group(1)?.toLowerCase().trim();
+
+      // "from <sender>" pattern
+      final fromMatch = RegExp(
+        r'\bfrom\b\s+([a-zA-Z0-9\s\-&/\.]+?)(?:\s+on\b|\s+ref\b|\s+upi\b|\.|$)',
+      ).firstMatch(body);
+      if (fromMatch != null) merchant = fromMatch.group(1)?.trim();
     }
-    
-    // Clean up
-    if (merchant != null) {
-      if (merchant.length < 3) return null;
-      // If it's a VPA, keep lowercase
-      if (merchant.contains('@')) return merchant.toLowerCase();
-      // uppercase first letters
-      return merchant.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-    }
-    return null;
+
+    return _cleanMerchant(merchant);
   }
 
+  static String? _cleanMerchant(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    // Remove trailing noise words
+    raw = raw.replaceAll(
+      RegExp(r'\b(your|the|a|an|account|ac|bank|upi|ref|no|on)\b', caseSensitive: false),
+      '',
+    ).trim();
+    if (raw.length < 3) return null;
+    // If VPA, keep as-is lowercase
+    if (raw.contains('@')) return raw.toLowerCase();
+    // Title-case for display
+    return raw
+        .split(RegExp(r'[\s]+'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+        .join(' ');
+  }
+
+  // ── Card transaction detection ───────────────────────────────────────────
+
+  static bool _isCardTransaction(String body) {
+    return body.contains('card') ||
+        body.contains('credit card') ||
+        body.contains('debit card') ||
+        RegExp(r'card\s*(?:no|xx|ending|xxxx)').hasMatch(body);
+  }
+
+  // ── UPI ref extraction ───────────────────────────────────────────────────
+
   static String? _extractUpiRef(String body) {
-    final refMatch = RegExp(r'(?:ref no|upi ref|txn id)[:\-\s]*(\d{12}|\d{10})').firstMatch(body);
-    if (refMatch != null) return refMatch.group(1);
-    return null;
+    final refMatch = RegExp(
+      r'(?:ref\s*no\.?|upi\s*ref\.?|txn\s*id\.?|transaction\s*id\.?)[\s:\-]*(\d{9,15})',
+      caseSensitive: false,
+    ).firstMatch(body);
+    return refMatch?.group(1);
+  }
+
+  // ── Bank name extraction ─────────────────────────────────────────────────
+
+  /// Extracts a human-readable bank name from the SMS sender ID.
+  static String _extractBankName(String sender) {
+    final s = sender.toUpperCase();
+
+    // Major private banks
+    if (s.contains('HDFC')) return 'HDFC Bank';
+    if (s.contains('ICICI')) return 'ICICI Bank';
+    if (s.contains('AXIS')) return 'Axis Bank';
+    if (s.contains('KOTAK')) return 'Kotak Bank';
+    if (s.contains('YES')) return 'Yes Bank';
+    if (s.contains('IDFC')) return 'IDFC FIRST Bank';
+    if (s.contains('INDUSIND') || s.contains('INDUS')) return 'IndusInd Bank';
+    if (s.contains('FEDERAL') || s.contains('FEDBANK')) return 'Federal Bank';
+    if (s.contains('RBL')) return 'RBL Bank';
+    if (s.contains('BANDHAN')) return 'Bandhan Bank';
+    if (s.contains('KARNATAKA') || s.contains('KBL')) return 'Karnataka Bank';
+    if (s.contains('KARUR') || s.contains('KVB')) return 'Karur Vysya Bank';
+
+    // Public sector banks
+    if (s.contains('SBI') || s.contains('SBIINB')) return 'SBI';
+    if (s.contains('PNB') || s.contains('PUNJAB')) return 'PNB';
+    if (s.contains('BOB') || s.contains('BARODA')) return 'Bank of Baroda';
+    if (s.contains('CANARA') || s.contains('CANBK')) return 'Canara Bank';
+    if (s.contains('UNION')) return 'Union Bank';
+    if (s.contains('INDIAN')) return 'Indian Bank';
+    if (s.contains('CENTRAL')) return 'Central Bank';
+    if (s.contains('UCO')) return 'UCO Bank';
+    if (s.contains('DENA')) return 'Dena Bank';
+
+    // Payments / wallets
+    if (s.contains('PAYTM')) return 'Paytm';
+    if (s.contains('PHONEPE') || s.contains('PHONEPE')) return 'PhonePe';
+    if (s.contains('GPAY') || s.contains('GOOGLEPAY')) return 'Google Pay';
+    if (s.contains('AMAZON')) return 'Amazon Pay';
+    if (s.contains('BAJAJ')) return 'Bajaj Finserv';
+
+    return 'Bank';
   }
 }
