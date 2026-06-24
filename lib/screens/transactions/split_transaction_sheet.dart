@@ -160,7 +160,7 @@ class _SplitTransactionSheetState extends ConsumerState<SplitTransactionSheet> {
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<Category>(
-                  value: _part1Category,
+                  initialValue: _part1Category,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(labelText: 'Category', labelStyle: TextStyle(color: colors.textMuted)),
@@ -197,7 +197,7 @@ class _SplitTransactionSheetState extends ConsumerState<SplitTransactionSheet> {
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<Category>(
-                  value: _part2Category,
+                  initialValue: _part2Category,
                   isExpanded: true,
                   dropdownColor: colors.backgroundSurface,
                   decoration: InputDecoration(labelText: 'Category', labelStyle: TextStyle(color: colors.textMuted)),

@@ -114,7 +114,7 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
     
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
-      title: 'FreelanceFlow',
+      title: 'FinFlow',
       theme: AppTheme.fromConfig(themeConfig),
       routerConfig: router,
       debugShowCheckedModeBanner: false,

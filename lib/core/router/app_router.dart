@@ -8,6 +8,7 @@ import '../../screens/goals/goals_screen.dart';
 import '../../screens/reports/reports_screen.dart';
 import '../../screens/settings/settings_screen.dart';
 import '../../screens/settings/subscriptions_screen.dart';
+import '../../screens/splash/splash_screen.dart';
 import '../../screens/ai/ai_chat_screen.dart';
 import '../../screens/ai/ai_report_screen.dart';
 import '../../screens/income/project_detail_screen.dart';
@@ -26,9 +27,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
 
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     redirect: (context, state) {
       if (settingsAsync is AsyncLoading) return null;
+      if (state.matchedLocation == '/splash') return null;
       
       final settings = settingsAsync.valueOrNull;
       final isComplete = settings?.onboardingComplete ?? false;
@@ -82,7 +84,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             StudentDetailScreen(studentId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/subscriptions', builder: (context, state) => const SubscriptionsScreen()),
-      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
     ],
   );
 });
