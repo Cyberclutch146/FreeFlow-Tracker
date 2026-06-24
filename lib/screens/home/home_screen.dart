@@ -46,11 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             tooltip: 'AI Assistant',
             onPressed: () => GoRouter.of(context).push('/ai-chat'),
           ),
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: colors.textPrimary),
-            tooltip: 'Settings',
-            onPressed: () => GoRouter.of(context).push('/settings'),
-          ),
+
           IconButton(
             icon: Icon(Icons.settings_outlined, color: colors.textPrimary),
             onPressed: () => GoRouter.of(context).push('/settings'),
