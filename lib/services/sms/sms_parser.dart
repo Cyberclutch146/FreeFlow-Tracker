@@ -1,5 +1,6 @@
 import '../../core/constants/app_constants.dart';
 import 'ml_classifier.dart';
+import '../ai/llm_parser_service.dart';
 
 /// Result of parsing a single bank SMS message.
 class ParsedSms {
@@ -28,6 +29,31 @@ class ParsedSms {
 /// Supports UPI, card, NEFT, and general debit/credit SMS formats.
 /// Tuned for Indian banking vocabulary including Hindi/regional mixed patterns.
 class SmsParser {
+  /// Asynchronously parses a message, using Regex first and falling back to LLM if enabled.
+  static Future<ParsedSms?> parseMessageAsync(String sender, String body, {String? geminiApiKey}) async {
+    final regexResult = parseMessage(sender, body);
+    if (regexResult != null) return regexResult;
+
+    // Fallback to LLM if key provided and it looks vaguely like a transaction
+    if (geminiApiKey != null && geminiApiKey.isNotEmpty) {
+      final lowerBody = body.toLowerCase();
+      bool mightBeTxn = lowerBody.contains('rs.') || lowerBody.contains('rs ') || 
+                        lowerBody.contains('inr') || lowerBody.contains('₹') || 
+                        lowerBody.contains('upi-mandate') || lowerBody.contains('upi mandate');
+      if (mightBeTxn) {
+        return await LlmParserService.parseMessage(sender, body, geminiApiKey);
+      }
+    }
+    return null;
+  }
+
+  /// Fast heuristic to check if a message might be a transaction (even if regex fails)
+  static bool mightBeTransaction(String body) {
+    final lowerBody = body.toLowerCase();
+    return lowerBody.contains('rs.') || lowerBody.contains('rs ') || 
+           lowerBody.contains('inr') || lowerBody.contains('₹') || 
+           lowerBody.contains('upi-mandate') || lowerBody.contains('upi mandate');
+  }
   /// Attempt to parse [body] from [sender] into a [ParsedSms].
   /// Returns null if the message doesn't look like a financial transaction.
   static ParsedSms? parseMessage(String sender, String body) {

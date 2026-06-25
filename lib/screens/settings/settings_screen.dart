@@ -207,19 +207,16 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () async {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanning inbox...')));
                     final smsService = ref.read(smsServiceProvider);
-                    final rawLogs = await smsService.fetchInboxHistory();
+                    final rawLogs = await smsService.fetchInboxHistory(geminiApiKey: settings.geminiApiKey);
                     int count = 0;
                     final repo = ref.read(transactionRepositoryProvider);
                     final existingTxns = await repo.getAll();
                     
-                    for (var log in rawLogs) {
-                      final parsed = SmsParser.parseMessage(log.sender, log.rawBody);
-                      if (parsed != null) {
-                        final newTxn = SmsToTransaction.convert(parsed, log);
-                        if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
-                          await repo.save(newTxn);
-                          count++;
-                        }
+                    for (var result in rawLogs) {
+                      final newTxn = SmsToTransaction.convert(result.parsed, result.log);
+                      if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
+                        await repo.save(newTxn);
+                        count++;
                       }
                     }
                     if (context.mounted) {
@@ -255,6 +252,43 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: '✅ Offline AI active — no API key needed',
                 onTap: () {},
               ).animate().fadeIn(delay: 630.ms).slideY(begin: 0.2),
+              const SizedBox(height: 12),
+              _buildPreferenceTile(
+                context: context,
+                icon: Icons.key_rounded,
+                title: 'Gemini API Key',
+                subtitle: settings.geminiApiKey?.isNotEmpty == true ? 'Key is set (Tap to change)' : 'Not set (Optional for better SMS parsing)',
+                onTap: () {
+                  final controller = TextEditingController(text: settings.geminiApiKey ?? '');
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: colors.backgroundElevated,
+                      title: Text('Gemini API Key', style: textStyles.headingMedium),
+                      content: TextField(
+                        controller: controller,
+                        style: TextStyle(color: colors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your API key',
+                          hintStyle: TextStyle(color: colors.textMuted),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel', style: TextStyle(color: colors.textMuted))),
+                        TextButton(
+                          onPressed: () {
+                            final val = controller.text.trim();
+                            ref.read(settingsRepositoryProvider).update((s) => s.copyWith(geminiApiKey: val.isEmpty ? null : val));
+                            Navigator.pop(ctx);
+                          },
+                          child: Text('Save', style: TextStyle(color: colors.accentPurple, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ).animate().fadeIn(delay: 640.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               _buildActionTile(
                 context: context,

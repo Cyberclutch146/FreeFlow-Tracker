@@ -79,16 +79,12 @@ Future<void> _runSync(SmsService smsService, TransactionRepository repo) async {
   try {
     // Note: fetchInboxHistory now only returns raw SMS logs (not pre-parsed).
     // We parse each log exactly once here to avoid double-parsing.
-    final rawLogs = await smsService.fetchInboxHistory();
+    final syncResults = await smsService.fetchInboxHistory();
     final existingTxns = await repo.getAll();
     int newCount = 0;
 
-    for (final log in rawLogs) {
-      // Single parse point — SmsParser is the only place parsing happens
-      final parsed = SmsParser.parseMessage(log.sender, log.rawBody);
-      if (parsed == null) continue;
-
-      final newTxn = SmsToTransaction.convert(parsed, log);
+    for (final result in syncResults) {
+      final newTxn = SmsToTransaction.convert(result.parsed, result.log);
       if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
         await repo.save(newTxn);
         // Add to local list to prevent duplicates within the same sync batch
