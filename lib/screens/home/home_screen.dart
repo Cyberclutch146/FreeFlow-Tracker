@@ -9,7 +9,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
-import 'review_sms_sheet.dart';
+
 import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -114,48 +114,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _buildSummaryCard(context, balance, income, expense),
                 const SizedBox(height: 32),
                 
-                // Unconfirmed Transactions Banner
-                unconfirmedAsync.when(
-                  data: (unconfirmed) {
-                    if (unconfirmed.isEmpty) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: GlassPanel(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: colors.accentRed.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.warning_amber_rounded, color: colors.accentRed, size: 20),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('${unconfirmed.length} Unconfirmed SMS', style: textStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
-                                  Text('Tap to review new transactions', style: textStyles.bodySmall.copyWith(color: colors.textMuted)),
-                                ],
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                ReviewSmsSheet.show(context);
-                              },
-                              child: Text('Review', style: TextStyle(color: colors.accentTeal, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn().slideX(begin: -0.2),
-                    );
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const SizedBox.shrink(),
-                ),
 
                 // Insights Row
                 insightsAsync.when(

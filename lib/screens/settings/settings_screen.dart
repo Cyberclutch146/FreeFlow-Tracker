@@ -8,11 +8,8 @@ import '../../core/constants/app_constants.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../models/app_settings.dart';
 import '../../services/export/csv_export_service.dart';
-import '../../services/sms/sms_parser.dart';
-import '../../services/sms/sms_to_transaction.dart';
 import '../../services/notification/notification_service.dart';
 import '../../services/notification/background_worker.dart';
-import '../../services/sms_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -162,86 +159,6 @@ class SettingsScreen extends ConsumerWidget {
                 color: colors.accentAmber,
                 onTap: () => context.push('/subscriptions'),
               ).animate().fadeIn(delay: 550.ms).slideY(begin: 0.2),
-              const SizedBox(height: 12),
-              _buildToggleTile(
-                context: context,
-                icon: Icons.sms_rounded,
-                title: 'SMS Parsing',
-                subtitle: settings.smsPermissionGranted ? 'Active' : 'Disabled',
-                value: settings.smsPermissionGranted,
-                onChanged: (val) async {
-                  if (val) {
-                    final smsService = ref.read(smsServiceProvider);
-                    final granted = await smsService.requestPermission();
-                    ref.read(settingsRepositoryProvider).update((s) => s.copyWith(smsPermissionGranted: granted));
-                  } else {
-                    ref.read(settingsRepositoryProvider).update((s) => s.copyWith(smsPermissionGranted: false));
-                  }
-                },
-              ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
-              const SizedBox(height: 12),
-              _buildToggleTile(
-                context: context,
-                icon: Icons.notifications_active_rounded,
-                title: 'Push Notifications',
-                subtitle: settings.pushNotificationsEnabled ? 'Weekly digests enabled' : 'Disabled',
-                value: settings.pushNotificationsEnabled,
-                onChanged: (val) async {
-                  if (val) {
-                    await NotificationService.requestPermissions();
-                    BackgroundWorker.scheduleWeeklyDigest();
-                  } else {
-                    BackgroundWorker.cancelAll();
-                  }
-                  ref.read(settingsRepositoryProvider).update((s) => s.copyWith(pushNotificationsEnabled: val));
-                },
-              ).animate().fadeIn(delay: 610.ms).slideY(begin: 0.2),
-              const SizedBox(height: 12),
-              
-              if (settings.smsPermissionGranted)
-                _buildActionTile(
-                  context: context,
-                  icon: Icons.sync_rounded,
-                  title: 'Sync SMS Inbox Now',
-                  color: colors.accentTeal,
-                  onTap: () async {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanning inbox...')));
-                    final smsService = ref.read(smsServiceProvider);
-                    final rawLogs = await smsService.fetchInboxHistory(geminiApiKey: settings.geminiApiKey);
-                    int count = 0;
-                    final repo = ref.read(transactionRepositoryProvider);
-                    final existingTxns = await repo.getAll();
-                    
-                    for (var result in rawLogs) {
-                      final newTxn = SmsToTransaction.convert(result.parsed, result.log);
-                      if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
-                        await repo.save(newTxn);
-                        count++;
-                      }
-                    }
-                    if (context.mounted) {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: colors.backgroundElevated,
-                          title: Text('Sync Complete', style: textStyles.headingMedium),
-                          content: Text(
-                            'Synced $count new transactions!\n\nDiagnostics:\n${SmsService.lastDiagnostic}',
-                            style: textStyles.bodyMedium,
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(),
-                              child: Text('OK', style: TextStyle(color: colors.accentTeal)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                ).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),
-              
-              const SizedBox(height: 32),
 
               Text('AI Engine', style: textStyles.headingMedium).animate().fadeIn(delay: 620.ms).slideY(begin: 0.2),
               const SizedBox(height: 16),

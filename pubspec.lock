@@ -486,14 +486,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.3"
-  flutter_sms_inbox:
-    dependency: "direct main"
-    description:
-      name: flutter_sms_inbox
-      sha256: "319721d50e5502ce811bb4ba2bbc9d12396da7a5764558087dc88d4b5909bcbb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -1229,14 +1221,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  telephony:
-    dependency: "direct main"
+  syncfusion_flutter_core:
+    dependency: transitive
     description:
-      name: telephony
-      sha256: "821e074acec3c611e48edadd50a6d9fef864943771a545da7924adcc8509ada9"
+      name: syncfusion_flutter_core
+      sha256: f054f5636c618dbf1a155409d0b5f3e70f8e9beb7ac7a8fdc870653968875e7d
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.0"
+    version: "33.2.15"
+  syncfusion_flutter_pdf:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_pdf
+      sha256: "843633545f6e2d0623d27327d02fbc933bff12b6f7df228b3c936528cbbfb230"
+      url: "https://pub.dev"
+    source: hosted
+    version: "33.2.13"
   term_glyph:
     dependency: transitive
     description:

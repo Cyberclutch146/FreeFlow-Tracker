@@ -1,7 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/transaction.dart';
-import '../models/sms_raw_log.dart';
+import '../models/weekly_report.dart';
 import '../models/project.dart';
 import '../models/student.dart';
 import '../models/session.dart';
@@ -30,7 +30,7 @@ class DatabaseService {
     _isar = await Isar.open(
       [
         TransactionSchema,
-        SmsRawLogSchema,
+        WeeklyReportSchema,
         ProjectSchema,
         StudentSchema,
         SessionSchema,
@@ -48,7 +48,7 @@ class DatabaseService {
   }
 
   IsarCollection<Transaction> get transactions => _isar.transactions;
-  IsarCollection<SmsRawLog> get smsRawLogs => _isar.smsRawLogs;
+  IsarCollection<WeeklyReport> get weeklyReports => _isar.weeklyReports;
   IsarCollection<Project> get projects => _isar.projects;
   IsarCollection<Student> get students => _isar.students;
   IsarCollection<Session> get sessions => _isar.sessions;

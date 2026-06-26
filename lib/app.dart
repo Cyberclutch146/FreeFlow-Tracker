@@ -73,25 +73,30 @@ class _FreelanceFlowAppState extends ConsumerState<FreelanceFlowApp> {
   }
 
   Future<void> _authenticate() async {
-    final available = await AuthService.isBiometricAvailable();
-    if (!available) {
-      setState(() => _isLocked = false); // Skip if no biometrics
-      return;
-    }
+    // TEMPORARY: disabled local auth for testing as requested by user
+    setState(() {
+      _isLocked = false;
+    });
+    return;
     
-    final success = await AuthService.authenticate();
-    if (success && mounted) {
-      setState(() {
-        _isLocked = false;
-      });
-    }
+    // final available = await AuthService.isBiometricAvailable();
+    // if (!available) {
+    //   setState(() => _isLocked = false); // Skip if no biometrics
+    //   return;
+    // }
+    // 
+    // final success = await AuthService.authenticate();
+    // if (success && mounted) {
+    //   setState(() {
+    //     _isLocked = false;
+    //   });
+    // }
   }
 
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeConfig = ref.watch(themeConfigProvider);
-    ref.watch(autoSmsSyncProvider);
     
     ref.listen<AsyncValue<List<Transaction>>>(recentTransactionsProvider, (prev, next) {
       if (next is AsyncData) {

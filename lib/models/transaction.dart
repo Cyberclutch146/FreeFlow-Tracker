@@ -36,7 +36,7 @@ class Transaction {
   @Enumerated(EnumType.name)
   RecurringFrequency? recurringFrequency;
   
-  String? smsRawLogId;
+  String? statementId;
   
   @Enumerated(EnumType.name)
   Confidence confidence;
@@ -62,7 +62,7 @@ class Transaction {
     this.studentId,
     required this.isRecurring,
     this.recurringFrequency,
-    this.smsRawLogId,
+    this.statementId,
     required this.confidence,
     required this.isConfirmed,
     this.merchantName,
@@ -88,7 +88,7 @@ class Transaction {
       recurringFrequency: json['recurringFrequency'] != null 
           ? RecurringFrequency.values.firstWhere((e) => e.name == json['recurringFrequency']) 
           : null,
-      smsRawLogId: json['smsRawLogId'] as String?,
+      statementId: json['statementId'] as String?,
       confidence: Confidence.values.firstWhere((e) => e.name == json['confidence']),
       isConfirmed: json['isConfirmed'] as bool,
       merchantName: json['merchantName'] as String?,
@@ -112,7 +112,7 @@ class Transaction {
     'studentId': studentId,
     'isRecurring': isRecurring,
     'recurringFrequency': recurringFrequency?.name,
-    'smsRawLogId': smsRawLogId,
+    'statementId': statementId,
     'confidence': confidence.name,
     'isConfirmed': isConfirmed,
     'merchantName': merchantName,
@@ -135,7 +135,7 @@ class Transaction {
     String? studentId,
     bool? isRecurring,
     RecurringFrequency? recurringFrequency,
-    String? smsRawLogId,
+    String? statementId,
     Confidence? confidence,
     bool? isConfirmed,
     String? merchantName,
@@ -157,7 +157,7 @@ class Transaction {
       studentId: studentId ?? this.studentId,
       isRecurring: isRecurring ?? this.isRecurring,
       recurringFrequency: recurringFrequency ?? this.recurringFrequency,
-      smsRawLogId: smsRawLogId ?? this.smsRawLogId,
+      statementId: statementId ?? this.statementId,
       confidence: confidence ?? this.confidence,
       isConfirmed: isConfirmed ?? this.isConfirmed,
       merchantName: merchantName ?? this.merchantName,

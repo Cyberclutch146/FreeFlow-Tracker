@@ -9,9 +9,7 @@ import '../../repositories/student_repository.dart';
 import '../../repositories/goal_repository.dart';
 import '../../repositories/budget_repository.dart';
 import '../../repositories/settings_repository.dart';
-import '../../services/sms_service.dart';
-import '../../services/sms/sms_parser.dart';
-import '../../services/sms/sms_to_transaction.dart';
+
 import '../../services/insights_engine.dart';
 import '../../services/savings_advisor.dart';
 import '../../models/transaction.dart';
@@ -50,63 +48,6 @@ final projectRepositoryProvider = Provider((ref) =>
 final studentRepositoryProvider = Provider((ref) =>
   StudentRepository(ref.read(databaseServiceProvider)));
 
-
-final smsServiceProvider = Provider((ref) => SmsService());
-
-final autoSmsSyncProvider = Provider<void>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  final isGranted = settingsAsync.valueOrNull?.smsPermissionGranted ?? false;
-
-  if (!isGranted) return;
-
-  final smsService = ref.watch(smsServiceProvider);
-  final repo = ref.watch(transactionRepositoryProvider);
-  
-  // Scrape inbox immediately on launch/provider creation
-  _runSync(smsService, repo);
-
-  // Setup periodic 2-minute polling loop
-  final timer = Timer.periodic(const Duration(minutes: 2), (_) {
-    _runSync(smsService, repo);
-  });
-  
-  ref.onDispose(() {
-    timer.cancel();
-  });
-});
-
-Future<void> _runSync(SmsService smsService, TransactionRepository repo) async {
-  try {
-    // Note: fetchInboxHistory now only returns raw SMS logs (not pre-parsed).
-    // We parse each log exactly once here to avoid double-parsing.
-    final syncResults = await smsService.fetchInboxHistory();
-    final existingTxns = await repo.getAll();
-    int newCount = 0;
-
-    for (final result in syncResults) {
-      final newTxn = SmsToTransaction.convert(result.parsed, result.log);
-      if (!SmsToTransaction.isDuplicate(newTxn, existingTxns)) {
-        await repo.save(newTxn);
-        // Add to local list to prevent duplicates within the same sync batch
-        existingTxns.add(newTxn);
-        newCount++;
-      }
-    }
-
-    if (newCount > 0) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text('✅ Auto-synced $newCount new transaction${newCount > 1 ? 's' : ''}!'),
-          backgroundColor: Colors.deepPurple,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  } catch (e) {
-    debugPrint('SMS auto-sync failed: $e');
-  }
-}
 
 final insightsEngineProvider = Provider((ref) => InsightsEngine());
 

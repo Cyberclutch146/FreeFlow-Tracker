@@ -11,6 +11,7 @@ import '../../core/constants/app_constants.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_panel.dart';
 import 'add_transaction_sheet.dart';
+import 'upload_statement_screen.dart';
 import '../../widgets/transactions/transaction_filter_sheet.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.upload_file_rounded, color: colors.textPrimary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UploadStatementScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.filter_list_rounded, color: !_filterOptions.isEmpty ? colors.accentPurple : colors.textPrimary),
             onPressed: () => _showFilterSheet(context, colors, textStyles),
