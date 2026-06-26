@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -20,7 +19,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  bool _smsGranted = false;
   String _selectedCurrency = '₹';
   AppThemeMode _selectedTheme = AppThemeMode.dark;
   double _incomeTarget = 50000;
@@ -28,7 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final List<String> _currencies = ['₹', '\$', '€', '£', '¥'];
 
   void _nextPage() {
-    if (_currentPage < 3) {
+    if (_currentPage < 2) {
       _pageController.animateToPage(
         _currentPage + 1,
         duration: const Duration(milliseconds: 300),
@@ -45,7 +43,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     
     settings = settings.copyWith(
       onboardingComplete: true,
-      smsPermissionGranted: _smsGranted,
+      smsPermissionGranted: false,
       currencySymbol: _selectedCurrency,
       theme: _selectedTheme,
       monthlyIncomeTarget: _incomeTarget,
@@ -78,7 +76,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (index) {
+                children: List.generate(3, (index) {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -100,7 +98,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 children: [
                   _buildWelcomeStep(colors, textStyles),
-                  _buildSmsStep(colors, textStyles),
                   _buildThemeAndCurrencyStep(colors, textStyles),
                   _buildIncomeStep(colors, textStyles),
                 ],
@@ -134,7 +131,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Text(_currentPage == 3 ? 'Get Started' : 'Next', 
+                      child: Text(_currentPage == 2 ? 'Get Started' : 'Next', 
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
@@ -173,60 +170,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _buildSmsStep(AppColors colors, AppTextStyles textStyles) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.sms_rounded, size: 80, color: colors.accentTeal)
-              .animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
-          const SizedBox(height: 32),
-          Text('Auto-Track Expenses', style: textStyles.headingLarge, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          Text(
-            'FreelanceFlow can read bank SMS notifications to automatically track and categorize your spending.',
-            style: textStyles.bodyLarge.copyWith(color: colors.textMuted),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          GlassPanel(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.shield_rounded, color: colors.accentTeal),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text('100% Private. Data never leaves your device.', 
-                        style: textStyles.bodyMedium),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final status = await Permission.sms.request();
-                    setState(() {
-                      _smsGranted = status.isGranted;
-                    });
-                  },
-                  icon: Icon(_smsGranted ? Icons.check_circle : Icons.security),
-                  label: Text(_smsGranted ? 'Permission Granted' : 'Grant SMS Permission'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _smsGranted ? colors.accentTeal : colors.accentPurple,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-    );
-  }
+
 
   Widget _buildThemeAndCurrencyStep(AppColors colors, AppTextStyles textStyles) {
     return Padding(

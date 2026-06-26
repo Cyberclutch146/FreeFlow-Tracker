@@ -14,6 +14,7 @@ import '../../screens/ai/ai_report_screen.dart';
 import '../../screens/income/project_detail_screen.dart';
 import '../../screens/income/student_detail_screen.dart';
 import '../../screens/settings/onboarding_screen.dart';
+import '../../screens/settings/tutorial_screen.dart';
 import '../di/providers.dart';
 
 /// The application router, defined as a Riverpod [Provider] so it can be
@@ -33,12 +34,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       
       final settings = settingsAsync.valueOrNull;
       final isComplete = settings?.onboardingComplete ?? false;
+      final isTutorialComplete = settings?.tutorialComplete ?? false;
       
       if (!isComplete && state.matchedLocation != '/onboarding') {
         return '/onboarding';
       }
       
-      if (isComplete && state.matchedLocation == '/onboarding') {
+      if (isComplete && !isTutorialComplete && state.matchedLocation != '/tutorial') {
+        return '/tutorial';
+      }
+      
+      if (isComplete && isTutorialComplete && (state.matchedLocation == '/onboarding' || state.matchedLocation == '/tutorial')) {
         return '/home';
       }
       
@@ -63,7 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen())],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/reports', builder: (context, state) => const AiChatScreen())],
+            routes: [GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen())],
           ),
         ],
       ),
@@ -89,6 +95,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/tutorial',
+        builder: (context, state) => const TutorialScreen(),
+      ),
+      GoRoute(
+        path: '/ai-chat',
+        builder: (context, state) => const AiChatScreen(),
       ),
     ],
   );

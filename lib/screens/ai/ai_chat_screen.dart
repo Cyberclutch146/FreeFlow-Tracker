@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../core/di/providers.dart';
@@ -104,6 +105,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     return Scaffold(backgroundColor: colors.backgroundPrimary, 
       
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.textPrimary),
+          onPressed: () => context.pop(),
+        ),
         title: Row(
           children: [
             Container(

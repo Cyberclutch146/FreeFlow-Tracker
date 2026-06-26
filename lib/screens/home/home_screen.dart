@@ -6,7 +6,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../core/utils/tutorial_keys.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
@@ -250,8 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildAiBanner(BuildContext context) {
     final colors = context.colors;
     return GestureDetector(
-      key: TutorialKeys.aiBannerKey,
-      onTap: () => GoRouter.of(context).go('/reports'),
+      onTap: () => GoRouter.of(context).push('/ai-chat'),
       child: GlassPanel(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -287,9 +285,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final colors = context.colors;
     final textStyles = context.textStyles;
 
-    return Container(
-      key: TutorialKeys.summaryCardKey,
-      child: GlassPanel(
+    return GlassPanel(
         padding: const EdgeInsets.all(24),
         blurSigma: 32,
       opacity: 0.15,
@@ -321,7 +317,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-    ));
+    );
   }
 
   Widget _buildStat(BuildContext context, String label, double amount, Color color, IconData icon) {
