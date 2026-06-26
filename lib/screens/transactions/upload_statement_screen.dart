@@ -7,6 +7,7 @@ import '../../services/statement_parser.dart';
 import '../../core/di/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/transaction.dart';
 
 class UploadStatementScreen extends ConsumerStatefulWidget {
   const UploadStatementScreen({super.key});
@@ -73,11 +74,43 @@ class _UploadStatementScreenState extends ConsumerState<UploadStatementScreen> {
       final repo = ref.read(transactionRepositoryProvider);
       await repo.saveAll(txns);
 
+      setState(() => _statusMessage = 'Generating AI Summary...');
+      final summary = await ref.read(geminiServiceProvider).generateStatementSummary(txns);
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully imported \${txns.length} transactions!', style: const TextStyle(color: Colors.white))),
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: ctx.colors.backgroundElevated,
+            title: Row(
+              children: [
+                Icon(Icons.auto_awesome, color: ctx.colors.accentPurple),
+                const SizedBox(width: 8),
+                Text('AI Summary', style: ctx.textStyles.headingMedium),
+              ],
+            ),
+            content: SingleChildScrollView(child: Text(summary, style: ctx.textStyles.bodyMedium)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.pop();
+                },
+                child: Text('Done', style: TextStyle(color: ctx.colors.textMuted)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: ctx.colors.accentPurple),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.pop();
+                  GoRouter.of(context).go('/reports');
+                },
+                child: const Text('Go to AI Hub', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
         );
-        context.pop();
       }
     } catch (e) {
       _showError('Failed to parse statement: \$e');

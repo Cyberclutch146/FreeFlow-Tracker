@@ -212,7 +212,7 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.auto_awesome,
                 title: 'Chat with AI Assistant',
                 color: colors.accentPurple,
-                onTap: () => context.push('/ai-chat'),
+                onTap: () => context.go('/reports'),
               ).animate().fadeIn(delay: 650.ms).slideY(begin: 0.2),
               const SizedBox(height: 12),
               _buildActionTile(

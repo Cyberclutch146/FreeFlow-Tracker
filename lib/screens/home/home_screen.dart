@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/common/glass_panel.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/tutorial_keys.dart';
 import '../../models/transaction.dart';
 import '../../core/constants/app_constants.dart';
 import '../transactions/add_transaction_sheet.dart';
@@ -44,7 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Icon(Icons.auto_awesome, color: Colors.white, size: 22),
             ),
             tooltip: 'AI Assistant',
-            onPressed: () => GoRouter.of(context).push('/ai-chat'),
+            onPressed: () => GoRouter.of(context).go('/reports'),
           ),
 
           IconButton(
@@ -112,6 +113,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 _buildSummaryCard(context, balance, income, expense),
+                const SizedBox(height: 24),
+                _buildAiBanner(context),
                 const SizedBox(height: 32),
                 
 
@@ -244,13 +247,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildAiBanner(BuildContext context) {
+    final colors = context.colors;
+    return GestureDetector(
+      key: TutorialKeys.aiBannerKey,
+      onTap: () => GoRouter.of(context).go('/reports'),
+      child: GlassPanel(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [colors.accentPurple, colors.accentTeal]),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Ask AI Assistant', style: context.textStyles.headingMedium),
+                  const SizedBox(height: 4),
+                  Text('Get insights, summaries, and financial advice instantly.', 
+                    style: context.textStyles.bodyMedium.copyWith(color: colors.textMuted)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+          ],
+        ),
+      ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
+    );
+  }
+
   Widget _buildSummaryCard(BuildContext context, double balance, double income, double expense) {
     final colors = context.colors;
     final textStyles = context.textStyles;
 
-    return GlassPanel(
-      padding: const EdgeInsets.all(24),
-      blurSigma: 32,
+    return Container(
+      key: TutorialKeys.summaryCardKey,
+      child: GlassPanel(
+        padding: const EdgeInsets.all(24),
+        blurSigma: 32,
       opacity: 0.15,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildStat(BuildContext context, String label, double amount, Color color, IconData icon) {

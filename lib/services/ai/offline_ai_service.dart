@@ -221,6 +221,7 @@ class OfflineAIService {
     'recurring_check': ['subscription', 'recurring', 'auto pay', 'auto-pay', 'regular payment', 'monthly charge', 'auto debit'],
     'daily_average': ['daily', 'average', 'per day', 'day by day', 'average spending'],
     'prediction': ['predict', 'projection', 'end of month', 'will i', 'if i continue', 'at this rate', 'how much will'],
+    'transaction_search': ['find', 'search', 'show me', 'list my', 'transactions over', 'spent on'],
   };
 
   String _classifyIntent(String message) {
@@ -259,6 +260,7 @@ class OfflineAIService {
       case 'recurring_check': return _handleRecurringCheck(ctx);
       case 'daily_average': return _handleDailyAverage(ctx);
       case 'prediction': return _handlePrediction(ctx);
+      case 'transaction_search': return _handleTransactionSearch(userMessage, ctx);
       default: return _handleUnknown(userMessage);
     }
   }
@@ -612,6 +614,48 @@ $outlook
 💡 Tip: These numbers are based on your current daily pace. A single big transaction can shift things significantly!''';
   }
 
+  String _handleTransactionSearch(String userMessage, _FinancialContext ctx) {
+    final lower = userMessage.toLowerCase();
+    
+    Category? targetCat;
+    for (var c in Category.values) {
+      if (lower.contains(c.name.toLowerCase()) || lower.contains(c.name.replaceAll('_', ' ').toLowerCase())) {
+        targetCat = c;
+        break;
+      }
+    }
+    
+    double? threshold;
+    final match = RegExp(r'(?:over|above|>)\s*₹?(\d+)').firstMatch(lower);
+    if (match != null) {
+      threshold = double.tryParse(match.group(1)!);
+    }
+    
+    var results = ctx.allTransactions.where((t) => t.direction == TransactionDirection.debit).toList();
+    
+    if (targetCat != null) {
+      results = results.where((t) => t.category == targetCat).toList();
+    }
+    if (threshold != null) {
+      results = results.where((t) => t.amount > threshold!).toList();
+    }
+    
+    if (results.isEmpty) {
+      return '🔍 I couldn\'t find any transactions matching your search criteria.';
+    }
+    
+    final sorted = results.toList()..sort((a, b) => b.date.compareTo(a.date));
+    final lines = sorted.take(10).map((t) => '• ${_formatDate(t.date)}: ${t.merchantName ?? t.note ?? t.category.name} - ₹${t.amount.toStringAsFixed(0)}').join('\n');
+    
+    return '''🔍 **Search Results**
+    
+Found ${results.length} matching transactions:
+
+$lines
+
+${results.length > 10 ? '*(Showing top 10 most recent)*' : ''}''';
+  }
+
   String _handleUnknown(String message) {
     final responses = [
       '🤔 Hmm, I\'m not sure I caught that. I\'m best at helping with:\n\n• Monthly summary\n• Budget status\n• Top expenses\n• Savings advice\n• Goal progress\n• Spending trends\n\nTry rephrasing your question!',
@@ -742,10 +786,48 @@ ${tips.map((t) => '• $t').join('\n')}
     if (ctx.goals.any((g) => g.status == GoalStatus.active) && savingsRate > 20) {
       tips.add('Great savings rate! Consider increasing your monthly goal allocation to hit targets faster.');
     }
+    
+    // Habit Tracking
+    final recurringMerchants = <String, int>{};
+    for (var t in ctx.thisMonth) {
+      if (t.merchantName != null && t.direction == TransactionDirection.debit) {
+        recurringMerchants[t.merchantName!] = (recurringMerchants[t.merchantName!] ?? 0) + 1;
+      }
+    }
+    for (var entry in recurringMerchants.entries) {
+      if (entry.value >= 4) {
+        tips.add('Habit spotted: You visited **${entry.key}** ${entry.value} times this month. Is this a necessary recurring expense?');
+      }
+    }
+
     if (tips.isEmpty) {
       tips.add('You\'re in good shape! Keep tracking expenses consistently for the best insights.');
     }
-    return tips.take(3).toList();
+    return tips.take(4).toList();
+  }
+
+  // ──────────────────────────────────────────────
+  // Statement Summary
+  // ──────────────────────────────────────────────
+
+  Future<String> generateStatementSummary(List<Transaction> importedTxns) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (importedTxns.isEmpty) return "No transactions found in this statement.";
+    
+    double totalIn = 0;
+    double totalOut = 0;
+    for (var t in importedTxns) {
+      if (t.direction == TransactionDirection.credit) totalIn += t.amount;
+      else totalOut += t.amount;
+    }
+    
+    return '''📄 **Statement Upload Successful!**
+    
+I processed **${importedTxns.length}** transactions from your bank statement.
+💰 Total Inflow: ₹${totalIn.toStringAsFixed(0)}
+💸 Total Outflow: ₹${totalOut.toStringAsFixed(0)}
+
+All transactions have been securely auto-categorized and added to your ledger. You can view them in the Transactions tab.''';
   }
 
   // ──────────────────────────────────────────────
@@ -824,6 +906,8 @@ class _ChatTurn {
 }
 
 class _FinancialContext {
+  final List<Transaction> allTransactions;
+  final List<Transaction> thisMonth;
   final double income;
   final double expense;
   final double lastIncome;
@@ -839,6 +923,8 @@ class _FinancialContext {
   final DateTime now;
 
   _FinancialContext({
+    required this.allTransactions,
+    required this.thisMonth,
     required this.income,
     required this.expense,
     required this.lastIncome,
@@ -893,6 +979,8 @@ class _FinancialContext {
         .toList();
 
     return _FinancialContext(
+      allTransactions: allTransactions,
+      thisMonth: thisMonth,
       income: income,
       expense: expense,
       lastIncome: lastIncome,

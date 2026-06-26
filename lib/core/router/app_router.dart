@@ -63,14 +63,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen())],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/reports', builder: (context, state) => const ReportsScreen())],
+            routes: [GoRoute(path: '/reports', builder: (context, state) => const AiChatScreen())],
           ),
         ],
       ),
 
       // ── Full-screen routes (push on top, no bottom nav) ─────────────────
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/ai-chat', builder: (context, state) => const AiChatScreen()),
       GoRoute(path: '/ai-report', builder: (context, state) => const AiReportScreen()),
       GoRoute(
         path: '/project-detail/:id',

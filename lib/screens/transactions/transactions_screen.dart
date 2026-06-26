@@ -87,15 +87,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.upload_file_rounded, color: colors.textPrimary),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const UploadStatementScreen()),
-              );
-            },
-          ),
+
           IconButton(
             icon: Icon(Icons.filter_list_rounded, color: !_filterOptions.isEmpty ? colors.accentPurple : colors.textPrimary),
             onPressed: () => _showFilterSheet(context, colors, textStyles),
@@ -123,21 +115,29 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             return true;
           }).toList();
 
-          if (filtered.isEmpty) {
-            return const EmptyState(
-              icon: Icons.receipt_long_rounded,
-              title: 'No transactions yet.',
-              subtitle: 'Import from SMS or add manually.',
-            );
-          }
-          
-          return ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            itemCount: filtered.length,
-            itemBuilder: (context, index) {
-              final t = filtered[index];
-              return _buildTransactionTile(context, ref, t);
-            },
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _buildUploadBanner(context, colors, textStyles),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? const EmptyState(
+                        icon: Icons.receipt_long_rounded,
+                        title: 'No transactions yet.',
+                        subtitle: 'Upload a bank statement or add manually.',
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 120),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final t = filtered[index];
+                          return _buildTransactionTile(context, ref, t);
+                        },
+                      ),
+              ),
+            ],
           );
         },
         loading: () => Center(
@@ -277,6 +277,45 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadBanner(BuildContext context, AppColors colors, AppTextStyles textStyles) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const UploadStatementScreen()),
+        );
+      },
+      child: GlassPanel(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.accentPurple.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.document_scanner_rounded, color: colors.accentPurple, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Upload Bank Statement', style: textStyles.headingSmall),
+                  const SizedBox(height: 4),
+                  Text('Import CSV or PDF to auto-categorize', 
+                    style: textStyles.bodySmall.copyWith(color: colors.textMuted)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, color: colors.textMuted, size: 16),
+          ],
         ),
       ),
     );

@@ -24,6 +24,7 @@ class AppSettings {
   String? geminiApiKey;
   String currencySymbol;
   bool pushNotificationsEnabled;
+  bool tutorialComplete;
 
   AppSettings({
     required this.id,
@@ -37,6 +38,7 @@ class AppSettings {
     this.geminiApiKey,
     this.currencySymbol = '₹',
     this.pushNotificationsEnabled = false,
+    this.tutorialComplete = false,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class AppSettings {
       geminiApiKey: json['geminiApiKey'] as String?,
       currencySymbol: json['currencySymbol'] as String? ?? '₹',
       pushNotificationsEnabled: json['pushNotificationsEnabled'] as bool? ?? false,
+      tutorialComplete: json['tutorialComplete'] as bool? ?? false,
     );
   }
 
@@ -67,6 +70,7 @@ class AppSettings {
     'geminiApiKey': geminiApiKey,
     'currencySymbol': currencySymbol,
     'pushNotificationsEnabled': pushNotificationsEnabled,
+    'tutorialComplete': tutorialComplete,
   };
 
   AppSettings copyWith({
@@ -81,6 +85,7 @@ class AppSettings {
     String? geminiApiKey,
     String? currencySymbol,
     bool? pushNotificationsEnabled,
+    bool? tutorialComplete,
   }) {
     return AppSettings(
       id: id ?? this.id,
@@ -94,6 +99,7 @@ class AppSettings {
       geminiApiKey: geminiApiKey ?? this.geminiApiKey,
       currencySymbol: currencySymbol ?? this.currencySymbol,
       pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      tutorialComplete: tutorialComplete ?? this.tutorialComplete,
     );
   }
 
