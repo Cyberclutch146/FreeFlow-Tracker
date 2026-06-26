@@ -17,8 +17,8 @@ FreelanceFlow follows a **Feature-First Layered Architecture** adapted for Flutt
 ├─────────────────────────────────────────┤
 │  Service Layer                          │
 │  lib/services/                          │
-│  Business logic: AI engine, SMS parser, │
-│  insights rules, savings advisor        │
+│  Business logic: AI engine, statement   │
+│  parser, insights rules, savings advisor│
 ├─────────────────────────────────────────┤
 │  Repository Layer                       │
 │  lib/repositories/                      │
@@ -81,7 +81,7 @@ final geminiServiceProvider = Provider<OfflineAIService>((ref) {
 - **Type-safe queries**: Fully Dart-typed query builder, no raw SQL
 
 ### DB Initialization & Migration
-`DatabaseService.initialize()` opens Isar and immediately runs `MigrationV1`, which creates the default `AppSettings` singleton if none exists.
+`DatabaseService.initialize()` opens Isar and immediately runs `MigrationV1`, which creates the default `AppSettings` singleton if none exists. The `AppSettings` model includes both `onboardingComplete` and `tutorialComplete` flags to control the first-launch flow.
 
 ### Isar ID Strategy
 All models use a `String id` (UUID) as the business key, with a computed `isarId` using FNV-1a hash for the Isar internal `Id`:
@@ -93,7 +93,44 @@ Id get isarId => id.fastHash; // See extensions.dart
 
 ## 4. Intelligence Engine Architecture
 
-### 4.1 Unified Categorization (`lib/services/ai/category_classifier.dart`)
+### 4.1 Bank Statement Parser (`lib/services/statement_parser.dart`)
+
+The primary data ingestion pipeline. Supports two formats:
+
+**CSV Parsing:**
+- Auto-detects column layout by scanning headers for keywords (date, amount, debit, credit, description, etc.)
+- Handles multiple CSV dialects from Indian banks (PNB, SBI, HDFC, ICICI, etc.)
+- Splits combined debit/credit columns vs. separate columns automatically
+- Cleans amount strings (removes commas, currency symbols, handles parenthesized negatives)
+
+**PDF Parsing (Dual Strategy):**
+1. **Rule-Based Fallback** — Regex patterns tuned for known bank PDF formats (e.g., PNB). Extracts date, description, amount, and balance from each line. Works 100% offline.
+2. **LLM-Assisted** (`lib/services/ai/llm_parser_service.dart`) — For complex/unknown PDF layouts, sends extracted text to Google Generative AI with a structured prompt requesting JSON output. Falls back to rule-based if no API key is configured.
+
+**Post-Processing Pipeline:**
+```
+Raw File (CSV/PDF)
+    │
+    ▼
+StatementParser.parseCSV() / parsePDF()
+    │
+    ▼
+List<Transaction> (with amounts, dates, descriptions)
+    │
+    ▼
+CategoryClassifier.classifyWithDirection()   → auto-categorize each transaction
+    │
+    ▼
+Duplicate detection (checks existing DB)     → filter out already-imported rows
+    │
+    ▼
+TransactionRepository.saveAll()              → persist to Isar
+    │
+    ▼
+OfflineAIService.generateStatementSummary()  → AI summary dialog shown to user
+```
+
+### 4.2 Unified Categorization (`lib/services/ai/category_classifier.dart`)
 
 **Single source of truth** for categorizing transactions by merchant/description.
 
@@ -104,25 +141,8 @@ Previously the codebase had three competing categorizers. They are now unified i
 - **Direction-aware fallback**: uncategorized credit transactions default to `Category.income`
 
 Used by:
-- `SmsToTransaction.convert()` — SMS auto-parsing pipeline
+- `StatementParser` — CSV/PDF bank statement import pipeline
 - `OfflineAIService.batchCategorize()` — AI engine batch classification
-
-### 4.2 SMS Parser (`lib/services/sms/sms_parser.dart`)
-
-Parses raw bank SMS text into `ParsedSms` using regex tuned for Indian banking formats.
-
-**Supported patterns:**
-- Debit: `debited`, `paid`, `withdrawn`, `purchase`, `used at`, `charged`
-- Credit: `credited`, `received`, `refund`, `cashback`, `IMPS received`
-- Amounts: `Rs. 1,000.50`, `Rs 1000`, `INR 50,000`, `₹500`
-- Merchants: `to <name>`, `at <name>`, UPI VPA (`name@bank`)
-- UPI refs: 9-15 digit transaction IDs
-- 25+ Indian banks identified by sender ID
-
-**Confidence scoring:**
-- `high`: amount + merchant both extracted
-- `medium`: amount only
-- `low`: fallback (currently unused — low-confidence SMS are discarded)
 
 ### 4.3 Offline AI Engine (`lib/services/ai/offline_ai_service.dart`)
 
@@ -133,7 +153,7 @@ A deterministic, intent-based conversational assistant. No API calls, no ML mode
 userMessage
     │
     ▼
-_classifyIntent()    → 12 intent patterns, longest-keyword match
+_classifyIntent()    → 15+ intent patterns, longest-keyword match
     │
     ▼
 _isFollowUp()        → checks history, detects follow-up phrases
@@ -144,12 +164,18 @@ _isFollowUp()        → checks history, detects follow-up phrases
                             │
                             ▼
                     _FinancialContext.build()
-                    (income, expense, budgets, goals, category breakdown)
+                    (income, expense, budgets, goals, category breakdown,
+                     allTransactions, thisMonth)
 ```
 
 **Session persistence:** The provider uses `ref.keepAlive()` so `_history`, `_lastIntent`, and `_turnCount` persist across navigation events within an app session.
 
-**Supported intents:** `greeting`, `monthly_summary`, `top_expenses`, `budget_check`, `savings_advice`, `income_status`, `goal_progress`, `spending_trend`, `category_breakdown`, `recurring_check`, `daily_average`, `prediction`
+**Supported intents:** `greeting`, `monthly_summary`, `top_expenses`, `budget_check`, `savings_advice`, `income_status`, `goal_progress`, `spending_trend`, `category_breakdown`, `recurring_check`, `daily_average`, `prediction`, `transaction_search`, `statement_summary`, `habit_tracking`
+
+**Advanced capabilities:**
+- **Transaction Search**: Parses natural language queries like "find transactions over 500" or "show payments to Amazon". Extracts amount thresholds, merchant names, and date ranges from the query.
+- **Statement Summaries**: After a bank statement upload, generates a comprehensive spending breakdown with category totals, top merchants, and actionable tips.
+- **Habit Tracking**: Analyzes spending patterns over time to identify behavioral trends (e.g., weekend splurges, end-of-month overspending).
 
 ### 4.4 Insights Engine (`lib/services/insights_engine.dart`)
 
@@ -208,30 +234,62 @@ final styles = context.textStyles; // AppTextStyles
 
 Two-tier routing via `lib/core/router/app_router.dart`:
 
-**Shell routes** (bottom nav stays visible):
-- `/home` → HomeScreen
-- `/transactions` → TransactionsScreen
-- `/income` → IncomeScreen
-- `/goals` → GoalsScreen
-- `/reports` → ReportsScreen
+### Router-Level Redirects
 
-**Top-level routes** (full-screen push, no bottom nav):
-- `/settings`, `/ai-chat`, `/ai-report`
-- `/project-detail/:id`, `/student-detail/:id`
-- `/subscriptions`
+The router implements a three-stage redirect chain for first-launch flows:
+
+```dart
+// 1. Not onboarded → force onboarding
+if (!onboardingComplete) → redirect to '/onboarding'
+
+// 2. Onboarded but no tutorial → force tutorial
+if (onboardingComplete && !tutorialComplete) → redirect to '/tutorial'
+
+// 3. Both complete but trying to revisit → send to home
+if (both complete && on /onboarding or /tutorial) → redirect to '/home'
+```
+
+### Shell Routes (Bottom Nav Visible)
+- `/home` → HomeScreen (dashboard + AI banner + financial snapshot)
+- `/transactions` → TransactionsScreen (transaction list + upload banner)
+- `/income` → IncomeScreen (projects + students tabs)
+- `/goals` → GoalsScreen (savings goals + budgets)
+- `/reports` → ReportsScreen (charts + analytics)
+
+### Top-Level Routes (Full-Screen, No Bottom Nav)
+- `/settings` → App preferences, data export, backup/restore
+- `/ai-chat` → Full-screen AI chat assistant (pushed from dashboard banner)
+- `/ai-report` → AI-generated financial report
+- `/project-detail/:id`, `/student-detail/:id` → Detail views
+- `/subscriptions` → Detected recurring charges
+- `/onboarding` → First-launch setup (3 steps)
+- `/tutorial` → Interactive feature tour (4 pages)
+- `/splash` → Initial loading screen
 
 ---
 
-## 7. SMS Auto-Sync
+## 7. Onboarding & Tutorial Flow
 
-The `autoSmsSyncProvider` (a `Provider<void>`) runs a background sync loop:
+FreelanceFlow implements a two-phase first-launch experience:
 
-1. On creation: immediately calls `_runSync()`
-2. Every 2 minutes: periodic `Timer` calls `_runSync()`
-3. `_runSync()` fetches inbox → parses each SMS **once** → converts to Transaction → duplicate-checks before saving
-4. Shows a SnackBar if new transactions were found
+### Phase 1: Onboarding (`lib/screens/settings/onboarding_screen.dart`)
+A 3-step PageView flow:
+1. **Welcome** — App introduction with privacy focus
+2. **Preferences** — Currency selection + theme picker (Dark/OLED/Light)
+3. **Income Goal** — Monthly income target slider
 
-The `SmsService.watchIncomingSms()` stream also listens for real-time incoming SMS while the app is in the foreground (background listening is disabled to avoid battery drain).
+On completion, writes `onboardingComplete: true` to `AppSettings` in Isar.
+
+### Phase 2: Tutorial (`lib/screens/settings/tutorial_screen.dart`)
+A 4-page interactive slideshow with miniature UI component mockups:
+1. **Financial Snapshot** — Mini GlassPanel balance card
+2. **AI Assistant** — Mini AI banner replica
+3. **Upload Statements** — Styled upload button mockup
+4. **Goals & Budgets** — Progress bar mockup with sample data
+
+On completion, writes `tutorialComplete: true` to `AppSettings` in Isar.
+
+Both phases are enforced by the GoRouter redirect logic — users cannot skip them.
 
 ---
 
@@ -256,3 +314,38 @@ Flow:
 5. On `AppLifecycleState.resumed` → `_authenticate()` called again
 
 Lock overlay is rendered in the `MaterialApp.router` builder using a `Stack`, ensuring it covers all routes including dialogs.
+
+---
+
+## 10. Bank Statement Import Architecture
+
+The statement import feature is a critical user-facing pipeline:
+
+```
+User taps "Upload Statement" banner (TransactionsScreen)
+    │
+    ▼
+GoRouter.push('/transactions/upload')  → UploadStatementScreen
+    │
+    ▼
+file_picker → user selects CSV or PDF
+    │
+    ├── CSV → StatementParser.parseCSV()
+    │         └── Auto-detect columns, clean amounts, extract dates
+    │
+    └── PDF → StatementParser.parsePDF()
+              ├── Try rule-based regex parser first
+              └── Fall back to LLM parser if regex fails
+    │
+    ▼
+Parsed transactions displayed in review list
+    │
+    ▼
+User confirms → save to Isar + show AI summary dialog
+```
+
+The `UploadStatementScreen` provides:
+- File type detection (CSV vs PDF by extension)
+- A preview list of parsed transactions before saving
+- Error handling with user-friendly messages
+- Post-import AI summary dialog via `OfflineAIService.generateStatementSummary()`
